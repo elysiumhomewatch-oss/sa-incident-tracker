@@ -18,7 +18,12 @@ let markersCluster = null;
 function initMap(containerId = 'map') {
   if (mapInstance) return mapInstance;
 
-  mapInstance = L.map(containerId, { center: MAP_CENTER, zoom: DEFAULT_ZOOM });
+  mapInstance = L.map(containerId, {
+    center: MAP_CENTER,
+    zoom: DEFAULT_ZOOM,
+    maxZoom: 19,          // ← Add this line (or 18/20 depending on your tiles)
+    minZoom: 3            // Optional but good practice
+  });
   
   markersCluster = L.markerClusterGroup({
     maxClusterRadius: 50,
@@ -29,7 +34,8 @@ function initMap(containerId = 'map') {
   mapInstance.addLayer(markersCluster);
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    maxZoom: 19           // ← Make sure the tile layer also declares it
   }).addTo(mapInstance);
 
   return mapInstance;
