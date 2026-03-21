@@ -1,16 +1,65 @@
 // sa-incident-tracker/js/public.js
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxwR8LmQ1zBjLWJVu9gXGwwT2wyXSsp3q4WcQT1Rb6dRIk9gvbiiZNJbUcwttMQ4ostdQ/exec";  // ← replace !
 
-document.addEventListener('DOMContentLoaded', () => {
-  initMap();
 
-  loadPublicAlerts();
 
   // Submit form handler (assuming you add form id="submit-form" in index.html)
 
 document.addEventListener('DOMContentLoaded', () => {
   initMap();
   loadPublicAlerts();
+
+  function showAddReportModal(lat, lng) {
+  const modal = document.getElementById('add-report-modal');
+  const coordsDisplay = document.getElementById('modal-coords-display');
+  const confirmBtn = document.getElementById('modal-confirm-btn');
+  const cancelBtn = document.getElementById('modal-cancel-btn');
+
+  if (!modal) {
+    console.warn("Add-report modal not found in DOM");
+    return;
+  }
+
+  // Show coordinates
+  coordsDisplay.textContent = `Latitude:  ${lat}\nLongitude: ${lng}`;
+
+  // Show modal
+  modal.style.display = 'flex';
+
+  // Confirm → fill form + close modal
+  const onConfirm = () => {
+    const latField = document.getElementById('lat');
+    const lngField = document.getElementById('lng');
+    const formElement = document.getElementById('submit-report-form');
+
+    if (latField && lngField) {
+      latField.value = lat;
+      lngField.value = lng;
+
+      // Scroll to form smoothly
+      formElement?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+      // Optional: focus first required field after coords
+      document.querySelector('#submit-report-form select')?.focus();
+    }
+
+    modal.style.display = 'none';
+    confirmBtn.removeEventListener('click', onConfirm);
+  };
+
+  // Cancel → remove temp marker + close
+  const onCancel = () => {
+    if (window.tempMarker) {
+      mapInstance.removeLayer(window.tempMarker);
+      window.tempMarker = null;
+    }
+    modal.style.display = 'none';
+    cancelBtn.removeEventListener('click', onCancel);
+  };
+
+  confirmBtn.addEventListener('click', onConfirm);
+  cancelBtn.addEventListener('click', onCancel);
+}
 
   const form = document.getElementById('submit-report-form');
   const messageDiv = document.getElementById('submit-message');
