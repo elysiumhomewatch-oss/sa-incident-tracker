@@ -9,7 +9,7 @@ function checkAdminAuth() {
   const auth = localStorage.getItem('adminAuth');
   if (!auth) {
     const password = prompt("Enter admin password:");
-    if (password !== "your-secret-password-here") { // ← CHANGE THIS
+    if (password !== "test") { // ← CHANGE THIS
       alert("Access denied");
       window.location.href = "index.html";
       return false;
