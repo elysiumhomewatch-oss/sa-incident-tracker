@@ -38,6 +38,44 @@ function initMap(containerId = 'map') {
     maxZoom: 19           // ← Make sure the tile layer also declares it
   }).addTo(mapInstance);
 
+  // js/map.js  (add inside initMap function, after adding the tile layer)
+
+let tempMarker = null;          // only one temp marker at a time
+let clickListener = null;
+
+function enableReportClick() {
+  if (clickListener) mapInstance.off('click', clickListener);
+
+  clickListener = function(e) {
+    const lat = e.latlng.lat.toFixed(5);
+    const lng = e.latlng.lng.toFixed(5);
+
+    // Remove previous temp marker if exists
+    if (tempMarker) {
+      mapInstance.removeLayer(tempMarker);
+    }
+
+    // Place small temporary marker
+    tempMarker = L.circleMarker([lat, lng], {
+      radius: 8,
+      fillColor: "#3388ff",
+      color: "#ffffff",
+      weight: 3,
+      opacity: 1,
+      fillOpacity: 0.8
+    }).addTo(mapInstance);
+
+    // Show modal / confirm dialog
+    showAddReportModal(lat, lng);
+  };
+
+  mapInstance.on('click', clickListener);
+}
+
+// Call this when public page wants click-to-report enabled
+// (we'll call it from public.js)
+export { enableReportClick };   // if using modules, or just make global if not
+
   return mapInstance;
 }
 
