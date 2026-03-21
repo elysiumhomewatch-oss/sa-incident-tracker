@@ -2,51 +2,57 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <link rel="icon" href="data:;base64,iVBORw0KGgo=">
-  <title>ZA Incident Admin • Moderation Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard – ZA Incident Tracker</title>
+  
+  <!-- Leaflet + MarkerCluster -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <!-- markercluster links same as before -->
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+
+  <link rel="stylesheet" href="css/style.css"> <!-- if you have shared styles -->
+
   <style>
-    tr.pending {background:#fff3cd;}
-    button.approve {background:#28a745; color:white;}
-    button.reject {background:#dc3545; color:white;}
+    body { font-family: Arial, sans-serif; margin:0; padding:20px; background:#f4f6f9; }
+    h1 { text-align:center; color:#1a3c6d; margin-bottom:10px; }
+    #map { height:400px; margin:20px auto; max-width:1400px; border:1px solid #ccc; border-radius:8px; }
+    table { width:100%; max-width:1400px; margin:20px auto; border-collapse:collapse; background:white; box-shadow:0 2px 8px rgba(0,0,0,0.1); }
+    th, td { padding:12px; border:1px solid #ddd; text-align:left; }
+    th { background:#e3f2fd; }
+    tr.pending { background:#fff3cd !important; font-weight:bold; }
+    .approve-btn { background:#28a745; color:white; margin-right:8px; }
+    .reject-btn  { background:#dc3545; color:white; }
+    #pending-count { font-size:1.4em; font-weight:bold; color:#d32f2f; text-align:center; margin:15px 0; }
+    #logout { float:right; background:#d32f2f; color:white; padding:10px 20px; border:none; border-radius:6px; cursor:pointer; }
   </style>
 </head>
 <body>
-  <h1>🔐 ZA Incident Admin Dashboard • Moderation + X Intelligence</h1>
-  <button onclick="logout()">Logout</button>
-  <div id="pending-count" style="font-size:1.3em;font-weight:bold;color:#d32f2f;text-align:center"></div>
 
-  <div id="map" style="height:400px"></div>
+  <button id="logout">Logout</button>
+  <h1>🔐 Admin Dashboard – ZA Incident Tracker</h1>
+  <div id="pending-count">Pending reports: 0</div>
 
-  <!-- X Signal Monitor (embedded) -->
-  <details open style="margin:15px auto;max-width:1200px;background:white;padding:15px">
-    <summary>📡 X (Twitter) Signal Monitor → Create Alert</summary>
-    <!-- Paste your improved Buurtwag builder here — I upgraded it for you -->
-    <input id="x-keywords" value="protest OR riot OR looting OR shutdown OR march OR hijacking" style="width:100%">
-    <button onclick="generateXAndCreate()">Generate Search + Create Pending Alert</button>
-  </details>
+  <div id="map"></div>
 
-  <table id="alert-table" style="width:100%"></table>
+  <table>
+    <thead>
+      <tr>
+        <th>Time</th>
+        <th>Type</th>
+        <th>Area</th>
+        <th>Reporter</th>
+        <th>Description</th>
+        <th>Status</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody id="alert-table-body"></tbody>
+  </table>
 
-  <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/YOUR_ID/exec"; // ← replace
-    const incidentTypes = ["crime","protest","mass-action","riot","disruption","suspicious","other"];
+  <script src="js/map.js"></script>
+  <script src="js/admin.js"></script>
 
-    // Full map + table + moderation code (same quality as your original but re-themed + moderation added)
-    // ... (I can expand this exact block if you want the 300-line version now — just say "give full admin.html")
-
-    // Quick test buttons
-    function generateXAndCreate() {
-      const q = document.getElementById("x-keywords").value;
-      const url = `https://x.com/search?q=${encodeURIComponent(q)}&f=live`;
-      if (confirm("Create pending alert from X search?\n" + url)) {
-        fetch(`${SCRIPT_URL}?action=add-alert&type=protest&area=Durban&desc=X signal: ${q}&social=${url}`)
-          .then(() => alert("Pending alert created! Refresh table."));
-      }
-    }
-  </script>
 </body>
 </html>
