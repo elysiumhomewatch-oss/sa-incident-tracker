@@ -3,14 +3,15 @@
 const MAP_CENTER = [-29.85, 31.03];  // Durban approx
 const DEFAULT_ZOOM = 11;
 
+// Brighter, more visible colors for markers & clusters
 const alertColors = {
-  crime:       { fill: "#ff5252", border: "#c62828" },      // bright red
-  protest:     { fill: "#448aff", border: "#1565c0" },      // bright blue
-  "mass-action":{ fill: "#ffab40", border: "#ef6c00" },     // bright orange
-  riot:        { fill: "#ab47bc", border: "#6a1b9a" },      // brighter purple
-  disruption:  { fill: "#ffeb3b", border: "#f9a825" },      // vivid yellow
-  suspicious:  { fill: "#a1887f", border: "#5d4037" },      // medium brown
-  other:       { fill: "#90a4ae", border: "#455a64" }       // cool gray
+  crime:       { fill: "#ff5252", border: "#c62828" },     // bright red
+  protest:     { fill: "#448aff", border: "#1565c0" },     // bright blue
+  "mass-action":{ fill: "#ffab40", border: "#ef6c00" },    // bright orange
+  riot:        { fill: "#ab47bc", border: "#6a1b9a" },     // brighter purple
+  disruption:  { fill: "#ffeb3b", border: "#f9a825" },     // vivid yellow
+  suspicious:  { fill: "#a1887f", border: "#5d4037" },     // medium brown
+  other:       { fill: "#90a4ae", border: "#455a64" }      // cool gray
 };
 
 // Global references so public.js can access them
@@ -33,7 +34,55 @@ function initMap(containerId = 'map') {
     maxClusterRadius: 50,
     spiderfyOnMaxZoom: true,
     showCoverageOnHover: false,
-    zoomToBoundsOnClick: true
+    zoomToBoundsOnClick: true,
+
+    // Improved cluster icon with brighter colors + better text contrast
+    iconCreateFunction: function(cluster) {
+      const count = cluster.getChildCount();
+
+      // Determine dominant type
+      const childMarkers = cluster.getAllChildMarkers();
+      const typeCounts = {};
+      childMarkers.forEach(m => {
+        const t = m.options.alertType || 'other';
+        typeCounts[t] = (typeCounts[t] || 0) + 1;
+      });
+
+      let dominantType = 'other';
+      let maxCount = 0;
+      for (const t in typeCounts) {
+        if (typeCounts[t] > maxCount) {
+          maxCount = typeCounts[t];
+          dominantType = t;
+        }
+      }
+
+      const colorInfo = alertColors[dominantType] || alertColors.other;
+
+      return L.divIcon({
+        html: `
+          <div style="
+            background-color: ${colorInfo.fill};
+            color: white;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 16px;
+            border: 3px solid ${colorInfo.border};
+            box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+            text-shadow: 0 0 4px rgba(0,0,0,0.9), 0 0 6px rgba(0,0,0,0.7);
+          ">
+            ${count}
+          </div>
+        `,
+        className: '', // removes default leaflet styling
+        iconSize: [44, 44]
+      });
+    }
   });
 
   window.mapInstance.addLayer(markersCluster);
@@ -50,7 +99,6 @@ function initMap(containerId = 'map') {
 }
 
 function enableReportClick() {
-  // Remove any existing listener to prevent duplicates
   if (clickListener) {
     window.mapInstance.off('click', clickListener);
   }
@@ -59,12 +107,10 @@ function enableReportClick() {
     const lat = e.latlng.lat.toFixed(5);
     const lng = e.latlng.lng.toFixed(5);
 
-    // Remove previous temp marker if exists
     if (window.tempMarker) {
       window.mapInstance.removeLayer(window.tempMarker);
     }
 
-    // Place small temporary blue marker
     window.tempMarker = L.circleMarker([lat, lng], {
       radius: 8,
       fillColor: "#3388ff",
@@ -74,7 +120,6 @@ function enableReportClick() {
       fillOpacity: 0.8
     }).addTo(window.mapInstance);
 
-    // Show the "Add report here?" modal
     showAddReportModal(lat, lng);
   };
 
