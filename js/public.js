@@ -14,91 +14,100 @@ document.addEventListener('DOMContentLoaded', () => {
   const messageDiv = document.getElementById('submit-message');
 
   // ────────────────────────────────────────────────
-// Submit form handler – with ImgBB photo upload
-// ────────────────────────────────────────────────
 if (form) {
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
 
-    const fileInput = document.getElementById('photo-upload');
-    let photoUrl = "";
-
     // ────────────────────────────────────────────────
-    // NEW: Photo upload to ImgBB (if a file is selected)
+    // Upload up to 3 photos to ImgBB
     // ────────────────────────────────────────────────
-    if (fileInput && fileInput.files.length > 0) {
-      const file = fileInput.files[0];
-      const uploadFormData = new FormData();
-      uploadFormData.append("image", file);
-      uploadFormData.append("key", "ccb5d3992f0066955a63d303a75c32a0"); // ← Paste your real ImgBB key here
+    let photoUrls = [];
 
-      try {
-        const uploadResponse = await fetch("https://api.imgbb.com/1/upload", {
-          method: "POST",
-          body: uploadFormData
-        });
+    for (let i = 1; i <= 3; i++) {
+      const fileInput = document.getElementById(`photo${i}`);
+      if (fileInput && fileInput.files && fileInput.files.length > 0) {
+        const file = fileInput.files[0];
+        console.log(`Preparing to upload photo ${i}: ${file.name}`);
 
-        const uploadResult = await uploadResponse.json();
+        const uploadFormData = new FormData();
+        uploadFormData.append("image", file);
+        uploadFormData.append("key", "ccb5d3992f0066955a63d303a75c32a0"); // your ImgBB key
 
-        if (uploadResult.success) {
-          photoUrl = uploadResult.data.url; // direct image URL
-          console.log("Photo uploaded successfully:", photoUrl);
-        } else {
-          console.error("ImgBB upload failed:", uploadResult.error);
-          alert("Photo upload failed: " + (uploadResult.error?.message || "Unknown error"));
-          // You can choose to continue without photo or stop here
-          // return; // ← uncomment if you want to block submit on upload fail
+        try {
+          const uploadResponse = await fetch("https://api.imgbb.com/1/upload", {
+            method: "POST",
+            body: uploadFormData
+          });
+
+          const uploadResult = await uploadResponse.json();
+          console.log(`ImgBB response for photo ${i}:`, uploadResult);
+
+          if (uploadResult.success && uploadResult.data && uploadResult.data.url) {
+            photoUrls.push(uploadResult.data.url);
+            console.log(`Photo ${i} uploaded successfully: ${uploadResult.data.url}`);
+          } else {
+            console.error(`Photo ${i} upload failed:`, uploadResult.error || uploadResult);
+            alert(`Photo ${i} upload failed — continuing without it.`);
+          }
+        } catch (uploadErr) {
+          console.error(`Photo ${i} network/upload error:`, uploadErr);
+          alert(`Could not upload photo ${i} — continuing without it.`);
         }
-      } catch (uploadErr) {
-        console.error("Photo upload network error:", uploadErr);
-        alert("Could not upload photo — continuing without it.");
       }
     }
 
     // ────────────────────────────────────────────────
-    // Prepare normal form data (including photo URL if uploaded)
+    // Prepare form data + add photo URLs as photo1, photo2, photo3
     // ────────────────────────────────────────────────
     const formData = new FormData(form);
     const params = new URLSearchParams();
 
     for (const [key, value] of formData.entries()) {
-      // If photo URL was uploaded, override any empty photo field
-      if (key === "photo" && photoUrl) {
-        params.append(key, photoUrl);
-      } else {
-        params.append(key, value.trim());
-      }
+      params.append(key, value.trim());
     }
+
+    // Add each uploaded photo URL as separate params (Apps Script expects photo1, photo2, photo3)
+    photoUrls.forEach((url, idx) => {
+      params.append(`photo${idx + 1}`, url);
+    });
 
     params.append('action', 'submit-alert');
 
+    console.log("Final params being sent:", params.toString());
+
     // ────────────────────────────────────────────────
-    // Send to Apps Script (same as before)
+    // Send to Apps Script
     // ────────────────────────────────────────────────
     try {
       const response = await fetch(`${SCRIPT_URL}?${params.toString()}`);
       const result = await response.json();
+
+      console.log("Server response:", result);
 
       if (result.success) {
         messageDiv.textContent = "Report submitted successfully — awaiting moderation.";
         messageDiv.style.color = "#28a745";
         messageDiv.style.display = "block";
         form.reset();
-        // Optional: clear file input visually
-        if (fileInput) fileInput.value = "";
+
+        // Clear file inputs visually
+        for (let i = 1; i <= 3; i++) {
+          const input = document.getElementById(`photo${i}`);
+          if (input) input.value = "";
+        }
       } else {
         messageDiv.textContent = "Submission failed: " + (result.error || "Unknown error");
         messageDiv.style.color = "#dc3545";
         messageDiv.style.display = "block";
       }
     } catch (err) {
-      console.error("Submit error:", err);
+      console.error("Submit network error:", err);
       messageDiv.textContent = "Network error — please try again later.";
       messageDiv.style.color = "#dc3545";
       messageDiv.style.display = "block";
     }
 
-    // Auto-hide message
+    // Auto-hide message after 8 seconds
     setTimeout(() => {
       messageDiv.style.display = "none";
     }, 8000);
