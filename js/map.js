@@ -1,82 +1,84 @@
 // sa-incident-tracker/js/map.js
+
 const MAP_CENTER = [-29.85, 31.03];  // Durban approx
 const DEFAULT_ZOOM = 11;
 
 const alertColors = {
   crime:       { fill: "#d32f2f", border: "#b71c1c" },
   protest:     { fill: "#1976d2", border: "#0d47a1" },
-  "mass-action":{ fill: "#f57c00", border: "#ef6c00" },
+  "mass-action": { fill: "#f57c00", border: "#ef6c00" },
   riot:        { fill: "#7b1fa2", border: "#4a148c" },
   disruption:  { fill: "#fbc02d", border: "#f9a825" },
   suspicious:  { fill: "#795548", border: "#4e342e" },
   other:       { fill: "#757575", border: "#424242" }
 };
 
-let mapInstance = null;
+// Global references so public.js can access them
+window.mapInstance = null;
+window.tempMarker = null;
 let markersCluster = null;
+let clickListener = null;
 
 function initMap(containerId = 'map') {
-  if (mapInstance) return mapInstance;
+  if (window.mapInstance) return window.mapInstance;
 
-  mapInstance = L.map(containerId, {
+  window.mapInstance = L.map(containerId, {
     center: MAP_CENTER,
     zoom: DEFAULT_ZOOM,
-    maxZoom: 19,          // ← Add this line (or 18/20 depending on your tiles)
-    minZoom: 3            // Optional but good practice
+    maxZoom: 19,
+    minZoom: 3
   });
-  
+
   markersCluster = L.markerClusterGroup({
     maxClusterRadius: 50,
     spiderfyOnMaxZoom: true,
     showCoverageOnHover: false,
     zoomToBoundsOnClick: true
   });
-  mapInstance.addLayer(markersCluster);
+
+  window.mapInstance.addLayer(markersCluster);
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-    maxZoom: 19           // ← Make sure the tile layer also declares it
-  }).addTo(mapInstance);
+    maxZoom: 19
+  }).addTo(window.mapInstance);
 
-  // js/map.js  (add inside initMap function, after adding the tile layer)
+  // Enable click-to-report functionality
+  enableReportClick();
 
-let tempMarker = null;          // only one temp marker at a time
-let clickListener = null;
+  return window.mapInstance;
+}
 
 function enableReportClick() {
-  if (clickListener) mapInstance.off('click', clickListener);
+  // Remove any existing listener to prevent duplicates
+  if (clickListener) {
+    window.mapInstance.off('click', clickListener);
+  }
 
   clickListener = function(e) {
     const lat = e.latlng.lat.toFixed(5);
     const lng = e.latlng.lng.toFixed(5);
 
     // Remove previous temp marker if exists
-    if (tempMarker) {
-      mapInstance.removeLayer(tempMarker);
+    if (window.tempMarker) {
+      window.mapInstance.removeLayer(window.tempMarker);
     }
 
-    // Place small temporary marker
-    tempMarker = L.circleMarker([lat, lng], {
+    // Place small temporary blue marker
+    window.tempMarker = L.circleMarker([lat, lng], {
       radius: 8,
       fillColor: "#3388ff",
       color: "#ffffff",
       weight: 3,
       opacity: 1,
       fillOpacity: 0.8
-    }).addTo(mapInstance);
+    }).addTo(window.mapInstance);
 
-    // Show modal / confirm dialog
+    // Show the "Add report here?" modal
     showAddReportModal(lat, lng);
   };
 
-  mapInstance.on('click', clickListener);
-}
-
-// Call this when public page wants click-to-report enabled
-// (we'll call it from public.js)
-export { enableReportClick };   // if using modules, or just make global if not
-
-  return mapInstance;
+  window.mapInstance.on('click', clickListener);
 }
 
 function addMarkerToCluster(alert) {
@@ -96,7 +98,7 @@ function addMarkerToCluster(alert) {
   const popupContent = `
     <b>${alert.type?.toUpperCase() || 'OTHER'} - ${alert.area || 'Unknown'}</b><br>
     ${alert.timestamp || '—'}<br>
-    ${alert.description ? alert.description.substring(0,120) + '...' : ''}<br>
+    ${alert.description ? alert.description.substring(0, 120) + '...' : ''}<br>
     Reporter: ${alert.reporter || 'Anonymous'}<br>
     Status: ${alert.status}<br>
     ${alert.social ? `<a href="${alert.social}" target="_blank">X / Social evidence</a>` : ''}
@@ -110,5 +112,7 @@ function addMarkerToCluster(alert) {
 function fitToMarkers() {
   if (!markersCluster || markersCluster.getLayers().length === 0) return;
   const bounds = markersCluster.getBounds();
-  if (bounds.isValid()) mapInstance.fitBounds(bounds, { padding: [60, 60] });
+  if (bounds.isValid()) {
+    window.mapInstance.fitBounds(bounds, { padding: [60, 60] });
+  }
 }
