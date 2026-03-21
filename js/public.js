@@ -17,48 +17,52 @@ document.addEventListener('DOMContentLoaded', () => {
 if (form) {
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
+    console.log("Form submit event triggered");
 
-    // ────────────────────────────────────────────────
-    // Upload up to 3 photos to ImgBB
-    // ────────────────────────────────────────────────
     let photoUrls = [];
 
+    // Try to upload up to 3 photos
     for (let i = 1; i <= 3; i++) {
       const fileInput = document.getElementById(`photo${i}`);
+      console.log(`Checking photo${i} input:`, fileInput);
+
       if (fileInput && fileInput.files && fileInput.files.length > 0) {
         const file = fileInput.files[0];
-        console.log(`Preparing to upload photo ${i}: ${file.name}`);
+        console.log(`Photo ${i} selected:`, file.name, file.size, file.type);
 
         const uploadFormData = new FormData();
         uploadFormData.append("image", file);
-        uploadFormData.append("key", "ccb5d3992f0066955a63d303a75c32a0"); // your ImgBB key
+        uploadFormData.append("key", "ccb5d3992f0066955a63d303a75c32a0");
 
         try {
+          console.log(`Sending upload request for photo ${i}...`);
           const uploadResponse = await fetch("https://api.imgbb.com/1/upload", {
             method: "POST",
             body: uploadFormData
           });
 
+          console.log(`Upload HTTP status for photo ${i}:`, uploadResponse.status);
+
           const uploadResult = await uploadResponse.json();
-          console.log(`ImgBB response for photo ${i}:`, uploadResult);
+          console.log(`Full ImgBB response for photo ${i}:`, JSON.stringify(uploadResult));
 
           if (uploadResult.success && uploadResult.data && uploadResult.data.url) {
             photoUrls.push(uploadResult.data.url);
-            console.log(`Photo ${i} uploaded successfully: ${uploadResult.data.url}`);
+            console.log(`Photo ${i} SUCCESS – URL:`, uploadResult.data.url);
           } else {
-            console.error(`Photo ${i} upload failed:`, uploadResult.error || uploadResult);
-            alert(`Photo ${i} upload failed — continuing without it.`);
+            console.error(`Photo ${i} FAILED:`, uploadResult.error || "No success field");
           }
         } catch (uploadErr) {
-          console.error(`Photo ${i} network/upload error:`, uploadErr);
-          alert(`Could not upload photo ${i} — continuing without it.`);
+          console.error(`Photo ${i} NETWORK/EXCEPTION ERROR:`, uploadErr.message);
         }
+      } else {
+        console.log(`No file selected for photo${i}`);
       }
     }
 
-    // ────────────────────────────────────────────────
-    // Prepare form data + add photo URLs as photo1, photo2, photo3
-    // ────────────────────────────────────────────────
+    console.log("All uploaded photo URLs:", photoUrls);
+
+    // Build params
     const formData = new FormData(form);
     const params = new URLSearchParams();
 
@@ -66,48 +70,44 @@ if (form) {
       params.append(key, value.trim());
     }
 
-    // Add each uploaded photo URL as separate params (Apps Script expects photo1, photo2, photo3)
+    // Add photos
     photoUrls.forEach((url, idx) => {
       params.append(`photo${idx + 1}`, url);
     });
 
     params.append('action', 'submit-alert');
 
-    console.log("Final params being sent:", params.toString());
+    console.log("FINAL PARAMS BEFORE SEND:", params.toString());
 
-    // ────────────────────────────────────────────────
-    // Send to Apps Script
-    // ────────────────────────────────────────────────
     try {
+      console.log("Sending to Apps Script...");
       const response = await fetch(`${SCRIPT_URL}?${params.toString()}`);
-      const result = await response.json();
+      console.log("Fetch response status:", response.status);
 
-      console.log("Server response:", result);
+      const result = await response.json();
+      console.log("FULL SERVER RESPONSE:", result);
 
       if (result.success) {
         messageDiv.textContent = "Report submitted successfully — awaiting moderation.";
         messageDiv.style.color = "#28a745";
         messageDiv.style.display = "block";
         form.reset();
-
-        // Clear file inputs visually
         for (let i = 1; i <= 3; i++) {
           const input = document.getElementById(`photo${i}`);
           if (input) input.value = "";
         }
       } else {
-        messageDiv.textContent = "Submission failed: " + (result.error || "Unknown error");
+        messageDiv.textContent = "Submission failed: " + (result.error || "Unknown");
         messageDiv.style.color = "#dc3545";
         messageDiv.style.display = "block";
       }
     } catch (err) {
-      console.error("Submit network error:", err);
-      messageDiv.textContent = "Network error — please try again later.";
+      console.error("Main fetch error:", err);
+      messageDiv.textContent = "Network error — check console.";
       messageDiv.style.color = "#dc3545";
       messageDiv.style.display = "block";
     }
 
-    // Auto-hide message after 8 seconds
     setTimeout(() => {
       messageDiv.style.display = "none";
     }, 8000);
