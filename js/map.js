@@ -5,13 +5,13 @@ const DEFAULT_ZOOM = 11;
 
 // Brighter, more visible colors for markers & clusters
 const alertColors = {
-  crime:       { fill: "#ff5252", border: "#c62828" },     // bright red
-  protest:     { fill: "#448aff", border: "#1565c0" },     // bright blue
-  "mass-action":{ fill: "#ffab40", border: "#ef6c00" },    // bright orange
-  riot:        { fill: "#ab47bc", border: "#6a1b9a" },     // brighter purple
-  disruption:  { fill: "#ffeb3b", border: "#f9a825" },     // vivid yellow
-  suspicious:  { fill: "#a1887f", border: "#5d4037" },     // medium brown
-  other:       { fill: "#90a4ae", border: "#455a64" }      // cool gray
+  crime:       { fill: "#ff5252", border: "#c62828" },
+  protest:     { fill: "#448aff", border: "#1565c0" },
+  "mass-action":{ fill: "#ffab40", border: "#ef6c00" },
+  riot:        { fill: "#ab47bc", border: "#6a1b9a" },
+  disruption:  { fill: "#ffeb3b", border: "#f9a825" },
+  suspicious:  { fill: "#a1887f", border: "#5d4037" },
+  other:       { fill: "#90a4ae", border: "#455a64" }
 };
 
 // Global references so public.js can access them
@@ -36,11 +36,9 @@ function initMap(containerId = 'map') {
     showCoverageOnHover: false,
     zoomToBoundsOnClick: true,
 
-    // Improved cluster icon with brighter colors + better text contrast
     iconCreateFunction: function(cluster) {
       const count = cluster.getChildCount();
 
-      // Determine dominant type
       const childMarkers = cluster.getAllChildMarkers();
       const typeCounts = {};
       childMarkers.forEach(m => {
@@ -79,7 +77,7 @@ function initMap(containerId = 'map') {
             ${count}
           </div>
         `,
-        className: '', // removes default leaflet styling
+        className: '',
         iconSize: [44, 44]
       });
     }
@@ -92,7 +90,6 @@ function initMap(containerId = 'map') {
     maxZoom: 19
   }).addTo(window.mapInstance);
 
-  // Enable click-to-report functionality
   enableReportClick();
 
   return window.mapInstance;
@@ -140,15 +137,35 @@ function addMarkerToCluster(alert) {
     fillOpacity: 0.8
   });
 
+  // ────────────────────────────────────────────────
+  // UPDATED POPUP – now supports multiple photos
+  // Assumes your sheet has columns: photo (H), photo2 (L), photo3 (M)
+  // You can add more (photo4, photo5, etc.) the same way
+  // ────────────────────────────────────────────────
   const popupContent = `
-  <b>${alert.type?.toUpperCase() || 'OTHER'} - ${alert.area || 'Unknown'}</b><br>
-  ${alert.timestamp || '—'}<br>
-  ${alert.description ? alert.description.substring(0,120) + '...' : ''}<br>
-  Reporter: ${alert.reporter || 'Anonymous'}<br>
-  Status: ${alert.status}<br>
-  ${alert.social ? `<a href="${alert.social}" target="_blank" style="color:#1976d2;">X / Social evidence →</a><br>` : ''}
-  ${alert.photo ? `<a href="${alert.photo}" target="_blank" style="color:#d81b60; font-weight:bold;">View Photo →</a>` : ''}
-`;
+    <b>${alert.type?.toUpperCase() || 'OTHER'} - ${alert.area || 'Unknown'}</b><br>
+    ${alert.timestamp || '—'}<br>
+    ${alert.description ? alert.description.substring(0,120) + '...' : ''}<br>
+    Reporter: ${alert.reporter || 'Anonymous'}<br>
+    Status: ${alert.status}<br>
+    ${alert.social ? `<a href="${alert.social}" target="_blank" style="color:#1976d2;">X / Social evidence →</a><br>` : ''}
+    
+    <!-- Single photo (existing column H) -->
+    ${alert.photo ? 
+      `<a href="${alert.photo}" target="_blank" style="color:#d81b60; font-weight:bold;">View Photo 1 →</a><br>` 
+      : ''}
+
+    <!-- Photo 2 (column L) -->
+    ${alert.photo2 ? 
+      `<a href="${alert.photo2}" target="_blank" style="color:#d81b60; font-weight:bold;">View Photo 2 →</a><br>` 
+      : ''}
+
+    <!-- Photo 3 (column M) -->
+    ${alert.photo3 ? 
+      `<a href="${alert.photo3}" target="_blank" style="color:#d81b60; font-weight:bold;">View Photo 3 →</a>` 
+      : ''}
+  `;
+
   marker.bindPopup(popupContent);
   marker.options.alertType = alert.type?.toLowerCase() || 'other';
   markersCluster.addLayer(marker);
