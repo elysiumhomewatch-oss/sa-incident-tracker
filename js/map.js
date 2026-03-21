@@ -4,13 +4,13 @@ const MAP_CENTER = [-29.85, 31.03];  // Durban approx
 const DEFAULT_ZOOM = 11;
 
 const alertColors = {
-  crime:       { fill: "#d32f2f", border: "#b71c1c" },
-  protest:     { fill: "#1976d2", border: "#0d47a1" },
-  "mass-action": { fill: "#f57c00", border: "#ef6c00" },
-  riot:        { fill: "#7b1fa2", border: "#4a148c" },
-  disruption:  { fill: "#fbc02d", border: "#f9a825" },
-  suspicious:  { fill: "#795548", border: "#4e342e" },
-  other:       { fill: "#757575", border: "#424242" }
+  crime:       { fill: "#ff5252", border: "#c62828" },      // bright red
+  protest:     { fill: "#448aff", border: "#1565c0" },      // bright blue
+  "mass-action":{ fill: "#ffab40", border: "#ef6c00" },     // bright orange
+  riot:        { fill: "#ab47bc", border: "#6a1b9a" },      // brighter purple
+  disruption:  { fill: "#ffeb3b", border: "#f9a825" },      // vivid yellow
+  suspicious:  { fill: "#a1887f", border: "#5d4037" },      // medium brown
+  other:       { fill: "#90a4ae", border: "#455a64" }       // cool gray
 };
 
 // Global references so public.js can access them
