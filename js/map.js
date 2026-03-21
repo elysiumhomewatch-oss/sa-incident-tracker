@@ -138,33 +138,52 @@ function addMarkerToCluster(alert) {
   });
 
   // ────────────────────────────────────────────────
-  // UPDATED POPUP – now supports multiple photos
-  // Assumes your sheet has columns: photo (H), photo2 (L), photo3 (M)
-  // You can add more (photo4, photo5, etc.) the same way
-  // ────────────────────────────────────────────────
-  const popupContent = `
-    <b>${alert.type?.toUpperCase() || 'OTHER'} - ${alert.area || 'Unknown'}</b><br>
-    ${alert.timestamp || '—'}<br>
-    ${alert.description ? alert.description.substring(0,120) + '...' : ''}<br>
-    Reporter: ${alert.reporter || 'Anonymous'}<br>
-    Status: ${alert.status}<br>
-    ${alert.social ? `<a href="${alert.social}" target="_blank" style="color:#1976d2;">X / Social evidence →</a><br>` : ''}
+// UPDATED POPUP – shows clickable thumbnail previews for all photos
+// Assumes photos are comma-separated URLs in column H (alert.photos)
+// ────────────────────────────────────────────────
+const popupContent = `
+  <div style="font-family: Arial, sans-serif; max-width: 320px;">
+    <b style="font-size: 1.2em;">${alert.type?.toUpperCase() || 'OTHER'} – ${alert.area || 'Unknown'}</b><br>
+    <small>${alert.timestamp || '—'}</small><br><br>
     
-    <!-- Single photo (existing column H) -->
-    ${alert.photo ? 
-      `<a href="${alert.photo}" target="_blank" style="color:#d81b60; font-weight:bold;">View Photo 1 →</a><br>` 
-      : ''}
+    <div style="margin: 8px 0; line-height: 1.4;">
+      ${alert.description ? alert.description.substring(0, 140) + (alert.description.length > 140 ? '...' : '') : 'No description'}
+    </div>
+    
+    <div style="margin: 10px 0; font-size: 0.95em;">
+      Reporter: ${alert.reporter || 'Anonymous'}<br>
+      Status: <strong>${alert.status}</strong>
+    </div>
 
-    <!-- Photo 2 (column L) -->
-    ${alert.photo2 ? 
-      `<a href="${alert.photo2}" target="_blank" style="color:#d81b60; font-weight:bold;">View Photo 2 →</a><br>` 
-      : ''}
+    ${alert.social ? `
+      <div style="margin: 10px 0;">
+        <a href="${alert.social}" target="_blank" style="color:#1976d2; text-decoration:none; font-weight:bold;">
+          → X / Social evidence
+        </a>
+      </div>
+    ` : ''}
 
-    <!-- Photo 3 (column M) -->
-    ${alert.photo3 ? 
-      `<a href="${alert.photo3}" target="_blank" style="color:#d81b60; font-weight:bold;">View Photo 3 →</a>` 
-      : ''}
-  `;
+    <!-- Photo previews -->
+    ${alert.photos ? 
+      alert.photos.split(',').map((url, i) => {
+        const trimmedUrl = url.trim();
+        return trimmedUrl ? `
+          <div style="margin: 12px 0 8px 0;">
+            <a href="${trimmedUrl}" target="_blank" style="display:block; text-decoration:none;">
+              <img src="${trimmedUrl}" 
+                   alt="Incident photo ${i+1}" 
+                   style="max-width:100%; height:auto; border-radius:6px; box-shadow:0 2px 6px rgba(0,0,0,0.25); border:1px solid #ddd;"
+                   onerror="this.src='https://via.placeholder.com/300x200?text=Image+Not+Found'; this.alt='Failed to load photo';">
+            </a>
+            <div style="text-align:center; margin-top:4px; font-size:0.85em; color:#555;">
+              Photo ${i+1}
+            </div>
+          </div>
+        ` : '';
+      }).join('') 
+      : '<div style="color:#777; font-style:italic; margin:10px 0;">No photos attached</div>'}
+  </div>
+`;
 
   marker.bindPopup(popupContent);
   marker.options.alertType = alert.type?.toLowerCase() || 'other';
