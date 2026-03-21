@@ -72,3 +72,40 @@ async function loadPublicAlerts() {
     // Optional: show message on page
   }
 }
+
+function showAddReportModal(lat, lng) {
+  const modal = document.getElementById('add-report-modal');
+  const coordsP = document.getElementById('modal-coords');
+  const confirmBtn = document.getElementById('modal-confirm');
+  const cancelBtn = document.getElementById('modal-cancel');
+
+  if (!modal) return; // fallback if modal HTML missing
+
+  coordsP.textContent = `Latitude: ${lat}\nLongitude: ${lng}`;
+
+  modal.style.display = 'flex';
+
+  const confirmHandler = () => {
+    const latInput = document.getElementById('lat');
+    const lngInput = document.getElementById('lng');
+    if (latInput && lngInput) {
+      latInput.value = lat;
+      lngInput.value = lng;
+      document.getElementById('submit-report-form')?.scrollIntoView({ behavior: 'smooth' });
+    }
+    modal.style.display = 'none';
+    confirmBtn.removeEventListener('click', confirmHandler);
+  };
+
+  const cancelHandler = () => {
+    if (tempMarker) {
+      mapInstance.removeLayer(tempMarker);
+      tempMarker = null;
+    }
+    modal.style.display = 'none';
+    cancelBtn.removeEventListener('click', cancelHandler);
+  };
+
+  confirmBtn.addEventListener('click', confirmHandler);
+  cancelBtn.addEventListener('click', cancelHandler);
+}
