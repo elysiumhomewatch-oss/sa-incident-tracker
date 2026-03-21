@@ -7,30 +7,55 @@ document.addEventListener('DOMContentLoaded', () => {
   loadPublicAlerts();
 
   // Submit form handler (assuming you add form id="submit-form" in index.html)
-  const form = document.getElementById('submit-form');
+
+document.addEventListener('DOMContentLoaded', () => {
+  initMap();
+  loadPublicAlerts();
+
+  const form = document.getElementById('submit-report-form');
+  const messageDiv = document.getElementById('submit-message');
+
   if (form) {
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
+
       const formData = new FormData(form);
       const params = new URLSearchParams();
-      for (const [k, v] of formData) params.append(k, v);
+
+      for (const [key, value] of formData.entries()) {
+        params.append(key, value.trim());
+      }
 
       params.append('action', 'submit-alert');
 
       try {
-        const res = await fetch(`${SCRIPT_URL}?action=get-alerts&filter=approved`);
-        const data = await res.json();
-        if (data.success) {
-          alert("Report submitted! It will appear after moderation.");
+        const response = await fetch(`${SCRIPT_URL}?${params.toString()}`);
+        const result = await response.json();
+
+        if (result.success) {
+          messageDiv.textContent = "Report submitted successfully — awaiting moderation.";
+          messageDiv.style.color = "#28a745";
+          messageDiv.style.display = "block";
           form.reset();
         } else {
-          alert("Error: " + (data.error || "Unknown"));
+          messageDiv.textContent = "Submission failed: " + (result.error || "Unknown error");
+          messageDiv.style.color = "#dc3545";
+          messageDiv.style.display = "block";
         }
       } catch (err) {
-        alert("Network error – try again later.");
+        console.error("Submit error:", err);
+        messageDiv.textContent = "Network error — please try again later.";
+        messageDiv.style.color = "#dc3545";
+        messageDiv.style.display = "block";
       }
+
+      // Auto-hide message after 8 seconds
+      setTimeout(() => {
+        messageDiv.style.display = "none";
+      }, 8000);
     });
   }
+});
 });
 
 async function loadPublicAlerts() {
