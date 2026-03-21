@@ -1,65 +1,14 @@
 // sa-incident-tracker/js/public.js
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxwR8LmQ1zBjLWJVu9gXGwwT2wyXSsp3q4WcQT1Rb6dRIk9gvbiiZNJbUcwttMQ4ostdQ/exec";  // ← replace !
 
-
-
-  // Submit form handler (assuming you add form id="submit-form" in index.html)
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxwR8LmQ1zBjLWJVu9gXGwwT2wyXSsp3q4WcQT1Rb6dRIk9gvbiiZNJbUcwttMQ4ostdQ/exec";
 
 document.addEventListener('DOMContentLoaded', () => {
   initMap();
+  
+  // IMPORTANT: This enables the click-to-report feature on the map
+  enableReportClick();
+
   loadPublicAlerts();
-
-  function showAddReportModal(lat, lng) {
-  const modal = document.getElementById('add-report-modal');
-  const coordsDisplay = document.getElementById('modal-coords-display');
-  const confirmBtn = document.getElementById('modal-confirm-btn');
-  const cancelBtn = document.getElementById('modal-cancel-btn');
-
-  if (!modal) {
-    console.warn("Add-report modal not found in DOM");
-    return;
-  }
-
-  // Show coordinates
-  coordsDisplay.textContent = `Latitude:  ${lat}\nLongitude: ${lng}`;
-
-  // Show modal
-  modal.style.display = 'flex';
-
-  // Confirm → fill form + close modal
-  const onConfirm = () => {
-    const latField = document.getElementById('lat');
-    const lngField = document.getElementById('lng');
-    const formElement = document.getElementById('submit-report-form');
-
-    if (latField && lngField) {
-      latField.value = lat;
-      lngField.value = lng;
-
-      // Scroll to form smoothly
-      formElement?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-      // Optional: focus first required field after coords
-      document.querySelector('#submit-report-form select')?.focus();
-    }
-
-    modal.style.display = 'none';
-    confirmBtn.removeEventListener('click', onConfirm);
-  };
-
-  // Cancel → remove temp marker + close
-  const onCancel = () => {
-    if (window.tempMarker) {
-      mapInstance.removeLayer(window.tempMarker);
-      window.tempMarker = null;
-    }
-    modal.style.display = 'none';
-    cancelBtn.removeEventListener('click', onCancel);
-  };
-
-  confirmBtn.addEventListener('click', onConfirm);
-  cancelBtn.addEventListener('click', onCancel);
-}
 
   const form = document.getElementById('submit-report-form');
   const messageDiv = document.getElementById('submit-message');
@@ -105,56 +54,80 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 });
-});
 
+// ────────────────────────────────────────────────
+// Modal handler for "Add report here?"
+// ────────────────────────────────────────────────
+function showAddReportModal(lat, lng) {
+  const modal = document.getElementById('add-report-modal');
+  const coordsDisplay = document.getElementById('modal-coords-display');
+  const confirmBtn = document.getElementById('modal-confirm-btn');
+  const cancelBtn = document.getElementById('modal-cancel-btn');
+
+  if (!modal) {
+    console.warn("Add-report modal not found in DOM");
+    return;
+  }
+
+  // Show coordinates in modal
+  coordsDisplay.textContent = `Latitude:  ${lat}\nLongitude: ${lng}`;
+
+  // Show modal
+  modal.style.display = 'flex';
+
+  // Confirm → fill form + close modal
+  const onConfirm = () => {
+    const latField = document.getElementById('lat');
+    const lngField = document.getElementById('lng');
+    const formElement = document.getElementById('submit-report-form');
+
+    if (latField && lngField) {
+      latField.value = lat;
+      lngField.value = lng;
+
+      // Scroll to form smoothly
+      formElement?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+      // Optional: focus the type dropdown after filling coords
+      document.querySelector('#submit-report-form select')?.focus();
+    }
+
+    modal.style.display = 'none';
+    confirmBtn.removeEventListener('click', onConfirm);
+  };
+
+  // Cancel → remove temp marker + close
+  const onCancel = () => {
+    if (window.tempMarker) {
+      window.mapInstance.removeLayer(window.tempMarker);
+      window.tempMarker = null;
+    }
+    modal.style.display = 'none';
+    cancelBtn.removeEventListener('click', onCancel);
+  };
+
+  // Attach listeners (once per modal open)
+  confirmBtn.addEventListener('click', onConfirm);
+  cancelBtn.addEventListener('click', onCancel);
+}
+
+// ────────────────────────────────────────────────
+// Load approved alerts only
+// ────────────────────────────────────────────────
 async function loadPublicAlerts() {
   try {
     const res = await fetch(`${SCRIPT_URL}?action=get-alerts&filter=approved`);
     const data = await res.json();
-    if (!data.success) throw new Error("Load failed");
+
+    if (!data.success) {
+      throw new Error("Load failed: " + (data.error || "Unknown response"));
+    }
 
     markersCluster.clearLayers();
     data.alerts.forEach(addMarkerToCluster);
     fitToMarkers();
   } catch (err) {
-    console.error(err);
-    // Optional: show message on page
+    console.error("Public alerts load error:", err);
+    // Optional: show user message on page
   }
-}
-
-function showAddReportModal(lat, lng) {
-  const modal = document.getElementById('add-report-modal');
-  const coordsP = document.getElementById('modal-coords');
-  const confirmBtn = document.getElementById('modal-confirm');
-  const cancelBtn = document.getElementById('modal-cancel');
-
-  if (!modal) return; // fallback if modal HTML missing
-
-  coordsP.textContent = `Latitude: ${lat}\nLongitude: ${lng}`;
-
-  modal.style.display = 'flex';
-
-  const confirmHandler = () => {
-    const latInput = document.getElementById('lat');
-    const lngInput = document.getElementById('lng');
-    if (latInput && lngInput) {
-      latInput.value = lat;
-      lngInput.value = lng;
-      document.getElementById('submit-report-form')?.scrollIntoView({ behavior: 'smooth' });
-    }
-    modal.style.display = 'none';
-    confirmBtn.removeEventListener('click', confirmHandler);
-  };
-
-  const cancelHandler = () => {
-    if (tempMarker) {
-      mapInstance.removeLayer(tempMarker);
-      tempMarker = null;
-    }
-    modal.style.display = 'none';
-    cancelBtn.removeEventListener('click', cancelHandler);
-  };
-
-  confirmBtn.addEventListener('click', confirmHandler);
-  cancelBtn.addEventListener('click', cancelHandler);
 }
