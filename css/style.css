@@ -65,3 +65,19 @@ form input, form textarea, form select {
   border: 1px solid #ccc;
   border-radius: 4px;
 }
+
+#submit-report-form label {
+  display: block;
+  margin: 1.2em 0 0.4em;
+  font-weight: bold;
+}
+#submit-report-form input,
+#submit-report-form textarea,
+#submit-report-form select {
+  width: 100%;
+  padding: 10px;
+  box-sizing: border-box;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 1em;
+}
