@@ -142,46 +142,49 @@ function addMarkerToCluster(alert) {
 // Assumes photos are comma-separated URLs in column H (alert.photos)
 // ────────────────────────────────────────────────
 const popupContent = `
-  <div style="font-family: Arial, sans-serif; max-width: 320px;">
-    <b style="font-size: 1.2em;">${alert.type?.toUpperCase() || 'OTHER'} – ${alert.area || 'Unknown'}</b><br>
-    <small>${alert.timestamp || '—'}</small><br><br>
-    
-    <div style="margin: 8px 0; line-height: 1.4;">
-      ${alert.description ? alert.description.substring(0, 140) + (alert.description.length > 140 ? '...' : '') : 'No description'}
+  <div style="font-family: Arial, sans-serif; max-width: 380px; min-width: 280px;">
+    <b style="font-size: 1.25em; color: #1a3c6d;">${alert.type?.toUpperCase() || 'OTHER'} – ${alert.area || 'Unknown'}</b><br>
+    <small style="color: #555;">${alert.timestamp || '—'}</small><br><br>
+
+    <div style="margin-bottom: 12px; line-height: 1.5;">
+      ${alert.description ? alert.description.substring(0, 160) + (alert.description.length > 160 ? '…' : '') : 'No description provided'}
     </div>
-    
-    <div style="margin: 10px 0; font-size: 0.95em;">
+
+    <div style="margin: 12px 0; font-size: 0.95em; color: #444;">
       Reporter: ${alert.reporter || 'Anonymous'}<br>
       Status: <strong>${alert.status}</strong>
     </div>
 
     ${alert.social ? `
-      <div style="margin: 10px 0;">
+      <div style="margin: 12px 0;">
         <a href="${alert.social}" target="_blank" style="color:#1976d2; text-decoration:none; font-weight:bold;">
           → X / Social evidence
         </a>
       </div>
     ` : ''}
 
-    <!-- Photo previews -->
-    ${alert.photos ? 
-      alert.photos.split(',').map((url, i) => {
-        const trimmedUrl = url.trim();
-        return trimmedUrl ? `
-          <div style="margin: 12px 0 8px 0;">
-            <a href="${trimmedUrl}" target="_blank" style="display:block; text-decoration:none;">
-              <img src="${trimmedUrl}" 
-                   alt="Incident photo ${i+1}" 
-                   style="max-width:100%; height:auto; border-radius:6px; box-shadow:0 2px 6px rgba(0,0,0,0.25); border:1px solid #ddd;"
-                   onerror="this.src='https://via.placeholder.com/300x200?text=Image+Not+Found'; this.alt='Failed to load photo';">
-            </a>
-            <div style="text-align:center; margin-top:4px; font-size:0.85em; color:#555;">
-              Photo ${i+1}
+    <!-- Horizontal photo row -->
+    <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px;">
+      ${alert.photos ? 
+        alert.photos.split(',').map((url, i) => {
+          const trimmedUrl = url.trim();
+          return trimmedUrl ? `
+            <div style="flex: 1 1 140px; max-width: 180px; text-align: center;">
+              <a href="${trimmedUrl}" target="_blank" style="display: block; text-decoration: none;">
+                <img src="${trimmedUrl}" 
+                     alt="Incident photo ${i+1}" 
+                     loading="lazy"
+                     style="width: 100%; height: auto; max-height: 140px; object-fit: cover; border-radius: 6px; box-shadow: 0 2px 6px rgba(0,0,0,0.25); border: 1px solid #ddd;"
+                     onerror="this.src='https://via.placeholder.com/180x120?text=Image+Not+Found'; this.alt='Failed to load photo';">
+              </a>
+              <div style="margin-top: 4px; font-size: 0.85em; color: #666;">
+                Photo ${i+1}
+              </div>
             </div>
-          </div>
-        ` : '';
-      }).join('') 
-      : '<div style="color:#777; font-style:italic; margin:10px 0;">No photos attached</div>'}
+          ` : '';
+        }).join('') 
+        : '<div style="color:#777; font-style:italic; text-align:center; margin:12px 0;">No photos attached</div>'}
+    </div>
   </div>
 `;
 
