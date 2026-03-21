@@ -1,40 +1,158 @@
 /* sa-incident-tracker/css/style.css */
+/* AfriForum-inspired styling: red accents, dark text, clean Proxima Nova feel */
+
+@import url('https://fonts.googleapis.com/css2?family=Proxima+Nova:wght@400;500;600;700&display=swap');
+
+:root {
+  --afriforum-red:     #C8102E;
+  --afriforum-dark:    #1A1A1A;
+  --afriforum-grey:    #4D4D4D;
+  --light-bg:          #F8F9FA;
+  --card-bg:           #FFFFFF;
+  --border-light:      #DEE2E6;
+}
+
+* {
+  box-sizing: border-box;
+}
+
 body {
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'Proxima Nova', Arial, Helvetica, sans-serif;
   margin: 0;
   padding: 20px;
-  background: #f4f6f9;
-  color: #333;
+  background: var(--light-bg);
+  color: var(--afriforum-dark);
+  line-height: 1.6;
+}
+
+h1, h2, h3 {
+  color: var(--afriforum-dark);
+  font-weight: 700;
 }
 
 h1 {
   text-align: center;
-  color: #1a3c6d;
-  margin-bottom: 0.5em;
+  color: var(--afriforum-red);
+  margin-bottom: 0.6em;
+  font-size: 2.2rem;
 }
 
 #map {
-  height: 600px;
+  height: 620px;
   margin: 20px auto;
   max-width: 1400px;
-  border: 1px solid #ccc;
+  border: 2px solid var(--afriforum-red);
   border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
 table {
   width: 100%;
   max-width: 1400px;
-  margin: 20px auto;
+  margin: 30px auto;
   border-collapse: collapse;
-  background: white;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  background: var(--card-bg);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+  border-radius: 8px;
+  overflow: hidden;
 }
 
 th, td {
-  padding: 12px;
-  border: 1px solid #ddd;
+  padding: 14px 12px;
+  border: 1px solid var(--border-light);
   text-align: left;
+}
+
+th {
+  background: var(--afriforum-red);
+  color: white;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.95em;
+  letter-spacing: 0.5px;
+}
+
+tr.pending {
+  background: #FFF5F5 !important; /* light red tint for pending */
+  font-weight: 600;
+}
+
+tr.approved {
+  background: #F0FFF0 !important; /* very light green */
+}
+
+button {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.15s ease;
+}
+
+.approve-btn {
+  background: #28a745;
+  color: white;
+}
+
+.reject-btn {
+  background: #dc3545;
+  color: white;
+}
+
+.blur-btn {
+  background: #ffc107;
+  color: black;
+}
+
+.submit-btn {
+  background: var(--afriforum-red);
+  color: white;
+  padding: 14px 32px;
+  font-size: 1.15em;
+  border-radius: 8px;
+  box-shadow: 0 3px 8px rgba(200,16,46,0.3);
+}
+
+.submit-btn:hover {
+  background: #a80d26;
+  transform: translateY(-1px);
+  box-shadow: 0 5px 12px rgba(200,16,46,0.4);
+}
+
+#pending-count {
+  font-size: 1.5em;
+  font-weight: 700;
+  color: var(--afriforum-red);
+  text-align: center;
+  margin: 20px 0;
+  background: rgba(200,16,46,0.08);
+  padding: 12px;
+  border-radius: 8px;
+}
+
+form label {
+  display: block;
+  margin: 1.2em 0 0.5em;
+  font-weight: 600;
+  color: var(--afriforum-dark);
+}
+
+form input, form textarea, form select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 1em;
+  background: #fff;
+  transition: border-color 0.2s;
+}
+
+form input:focus, form textarea:focus, form select:focus {
+  border-color: var(--afriforum-red);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(200,16,46,0.15);
+  }  text-align: left;
 }
 
 th {
