@@ -1,6 +1,67 @@
-body {font-family: Arial, sans-serif; margin:0; padding:20px; background:#f4f6f9;}
-h1 {text-align:center; color:#1a3c6d;}
-#map {height:600px; border:1px solid #ccc; border-radius:8px;}
-button {cursor:pointer;}
-.pending {background:#fff3cd !important;}
-.approved {background:#d4edda !important;}
+/* sa-incident-tracker/css/style.css */
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  margin: 0;
+  padding: 20px;
+  background: #f4f6f9;
+  color: #333;
+}
+
+h1 {
+  text-align: center;
+  color: #1a3c6d;
+  margin-bottom: 0.5em;
+}
+
+#map {
+  height: 600px;
+  margin: 20px auto;
+  max-width: 1400px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+table {
+  width: 100%;
+  max-width: 1400px;
+  margin: 20px auto;
+  border-collapse: collapse;
+  background: white;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+th, td {
+  padding: 12px;
+  border: 1px solid #ddd;
+  text-align: left;
+}
+
+th {
+  background: #e3f2fd;
+}
+
+tr.pending { background: #fff3cd !important; }
+tr.approved { background: #d4edda !important; }
+tr.rejected { background: #f8d7da !important; text-decoration: line-through; }
+
+button {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.approve-btn { background: #28a745; color: white; }
+.reject-btn  { background: #dc3545; color: white; }
+.submit-btn  { background: #007bff; color: white; padding: 12px 24px; font-size: 1.1em; }
+
+form label { display: block; margin: 1em 0 0.4em; font-weight: bold; }
+form input, form textarea, form select {
+  width: 100%;
+  padding: 8px;
+  box-sizing: border-box;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
