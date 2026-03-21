@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ZA Incident Tracker • Public</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+  <link rel="stylesheet" href="css/style.css">
+  <style> /* extra inline for speed */ #map{height:620px;} </style>
+</head>
+<body>
+  <h1>🚨 ZA Incident Tracker • Durban / KZN (Community View)</h1>
+  <p style="text-align:center">Only moderator-approved incidents shown • Submit below → waits for review</p>
+
+  <div id="map"></div>
+
+  <!-- Filters + Submit -->
+  <details style="max-width:800px;margin:20px auto;background:white;padding:15px;border-radius:8px">
+    <summary>Filters + Submit New Report (anonymous)</summary>
+    <!-- Your existing filters + new simple form -->
+    <button onclick="submitReport()">Submit Anonymous Report → Pending Review</button>
+  </details>
+
+  <script src="js/map.js"></script>
+  <script src="js/public.js"></script>
+</body>
+</html>
