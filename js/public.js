@@ -25,10 +25,11 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       params.append('action', 'submit-alert');
-
+console.log("Submitting these params:", params.toString());
       try {
         const response = await fetch(`${SCRIPT_URL}?${params.toString()}`);
         const result = await response.json();
+        console.log("Server response:", result);
 
         if (result.success) {
           messageDiv.textContent = "Report submitted successfully — awaiting moderation.";
