@@ -141,14 +141,14 @@ function addMarkerToCluster(alert) {
   });
 
   const popupContent = `
-    <b>${alert.type?.toUpperCase() || 'OTHER'} - ${alert.area || 'Unknown'}</b><br>
-    ${alert.timestamp || '—'}<br>
-    ${alert.description ? alert.description.substring(0, 120) + '...' : ''}<br>
-    Reporter: ${alert.reporter || 'Anonymous'}<br>
-    Status: ${alert.status}<br>
-    ${alert.social ? `<a href="${alert.social}" target="_blank">X / Social evidence</a>` : ''}
-  `;
-
+  <b>${alert.type?.toUpperCase() || 'OTHER'} - ${alert.area || 'Unknown'}</b><br>
+  ${alert.timestamp || '—'}<br>
+  ${alert.description ? alert.description.substring(0,120) + '...' : ''}<br>
+  Reporter: ${alert.reporter || 'Anonymous'}<br>
+  Status: ${alert.status}<br>
+  ${alert.social ? `<a href="${alert.social}" target="_blank" style="color:#1976d2;">X / Social evidence →</a><br>` : ''}
+  ${alert.photo ? `<a href="${alert.photo}" target="_blank" style="color:#d81b60; font-weight:bold;">View Photo →</a>` : ''}
+`;
   marker.bindPopup(popupContent);
   marker.options.alertType = alert.type?.toLowerCase() || 'other';
   markersCluster.addLayer(marker);
