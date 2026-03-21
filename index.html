@@ -75,5 +75,29 @@
 
   <script src="js/map.js"></script>
   <script src="js/public.js"></script>
+
+  <!-- Click-to-Report Confirmation Modal -->
+<div id="add-report-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.65); z-index:2000; justify-content:center; align-items:center; font-family:Arial,Helvetica,sans-serif;">
+  <div style="background:#fff; padding:28px; border-radius:10px; max-width:460px; width:92%; box-shadow:0 12px 40px rgba(0,0,0,0.35);">
+    <h3 style="margin-top:0; color:#1a3c6d;">Add new report at this location?</h3>
+    
+    <p style="margin:18px 0; font-size:1.05em;">
+      Coordinates selected on map:
+    </p>
+    
+    <p id="modal-coords-display" style="font-family:monospace; background:#f8f9fa; padding:12px; border-radius:6px; border:1px solid #dee2e6; white-space:pre; margin:0 0 24px 0;">
+      Latitude: —\nLongitude: —
+    </p>
+    
+    <div style="display:flex; gap:16px; justify-content:flex-end;">
+      <button id="modal-cancel-btn" style="padding:10px 22px; background:#6c757d; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:bold;">
+        Cancel
+      </button>
+      <button id="modal-confirm-btn" style="padding:10px 22px; background:#007bff; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:bold;">
+        Yes – fill form
+      </button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
