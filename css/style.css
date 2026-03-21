@@ -1,0 +1,6 @@
+body {font-family: Arial, sans-serif; margin:0; padding:20px; background:#f4f6f9;}
+h1 {text-align:center; color:#1a3c6d;}
+#map {height:600px; border:1px solid #ccc; border-radius:8px;}
+button {cursor:pointer;}
+.pending {background:#fff3cd !important;}
+.approved {background:#d4edda !important;}
