@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
       params.append('action', 'submit-alert');
 
       try {
-        const res = await fetch(`${SCRIPT_URL}?${params}`);
+        const res = await fetch(`${SCRIPT_URL}?action=get-alerts&filter=approved`);
         const data = await res.json();
         if (data.success) {
           alert("Report submitted! It will appear after moderation.");
