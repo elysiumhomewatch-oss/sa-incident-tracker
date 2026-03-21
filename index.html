@@ -2,14 +2,17 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  |<link rel="icon" href="data:;base64,iVBORw0KGgo=">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="data:;base64,iVBORw0KGgo="> <!-- fixed: removed stray | -->
   <title>ZA Incident Tracker • Public</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
   <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
   <link rel="stylesheet" href="css/style.css">
-  <style> /* extra inline for speed */ #map{height:620px;} </style>
+  <style>
+    #map { height: 620px; }
+  </style>
 </head>
 <body>
   <h1>🚨 ZA Incident Tracker • Durban / KZN (Community View)</h1>
@@ -18,96 +21,91 @@
   <div id="map"></div>
 
   <!-- Filters + Submit -->
-  <details style="max-width:800px;margin:20px auto;background:white;padding:15px;border-radius:8px">
+  <details style="max-width:800px; margin:20px auto; background:white; padding:15px; border-radius:8px;">
+    <summary style="font-weight:bold; cursor:pointer;">Submit New Report (Anonymous)</summary>
+
     <!-- Public Submit Form -->
-<div style="max-width: 700px; margin: 30px auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-  <h2 style="text-align: center; color: #1a3c6d;">Submit New Report (Anonymous)</h2>
-  <p style="text-align: center; color: #555; font-size: 0.95em;">
-    Your report will be reviewed before appearing on the map.
-  </p>
+    <div style="max-width: 700px; margin: 30px auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+      <h2 style="text-align: center; color: #1a3c6d;">Submit New Report (Anonymous)</h2>
+      <p style="text-align: center; color: #555; font-size: 0.95em;">
+        Your report will be reviewed before appearing on the map.
+      </p>
 
-  <form id="submit-report-form">
-    <label for="type">Incident Type *</label>
-    <select id="type" name="type" required>
-      <option value="">-- Select type --</option>
-      <option value="crime">Crime (theft, hijacking, shooting, etc.)</option>
-      <option value="protest">Protest / March / Demonstration</option>
-      <option value="mass-action">Mass Action / Strike / Blockade</option>
-      <option value="riot">Riot / Looting / Civil Unrest</option>
-      <option value="disruption">Major Disruption (road block, shutdown)</option>
-      <option value="suspicious">Suspicious Activity / Gathering</option>
-      <option value="other">Other</option>
-    </select>
+      <form id="submit-report-form">
+        <label for="type">Incident Type *</label>
+        <select id="type" name="type" required>
+          <option value="">-- Select type --</option>
+          <option value="crime">Crime (theft, hijacking, shooting, etc.)</option>
+          <option value="protest">Protest / March / Demonstration</option>
+          <option value="mass-action">Mass Action / Strike / Blockade</option>
+          <option value="riot">Riot / Looting / Civil Unrest</option>
+          <option value="disruption">Major Disruption (road block, shutdown)</option>
+          <option value="suspicious">Suspicious Activity / Gathering</option>
+          <option value="other">Other</option>
+        </select>
 
-    <label for="area">Area / Suburb / Landmark *</label>
-    <input type="text" id="area" name="area" placeholder="e.g. Durban CBD, Umlazi V, Pinetown" required>
+        <label for="area">Area / Suburb / Landmark *</label>
+        <input type="text" id="area" name="area" placeholder="e.g. Durban CBD, Umlazi V, Pinetown" required>
 
-    <label for="description">Description of what you saw / heard *</label>
-    <textarea id="description" name="description" rows="5" placeholder="What happened? When? Any details..." required></textarea>
+        <label for="description">Description of what you saw / heard *</label>
+        <textarea id="description" name="description" rows="5" placeholder="What happened? When? Any details..." required></textarea>
 
-    <div style="display: flex; gap: 15px; flex-wrap: wrap;">
-      <div style="flex: 1;">
-        <label for="lat">Approximate Latitude (optional)</label>
-        <input type="number" step="any" id="lat" name="lat" placeholder="-29.858">
-      </div>
-      <div style="flex: 1;">
-        <label for="lng">Approximate Longitude (optional)</label>
-        <input type="number" step="any" id="lng" name="lng" placeholder="31.021">
+        <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+          <div style="flex: 1;">
+            <label for="lat">Approximate Latitude (optional)</label>
+            <input type="number" step="any" id="lat" name="lat" placeholder="-29.858">
+          </div>
+          <div style="flex: 1;">
+            <label for="lng">Approximate Longitude (optional)</label>
+            <input type="number" step="any" id="lng" name="lng" placeholder="31.021">
+          </div>
+        </div>
+
+        <div style="margin:15px 0;">
+          <label>Attach Photos (up to 3 – optional)</label>
+          <input type="file" id="photo1" accept="image/*"><br><br>
+          <input type="file" id="photo2" accept="image/*"><br><br>
+          <input type="file" id="photo3" accept="image/*"> <!-- fixed: removed trailing space in id -->
+        </div>
+
+        <div style="text-align: center; margin-top: 25px;">
+          <button type="submit" class="submit-btn" style="background:#007bff; color:white; padding:12px 30px; font-size:1.1em; border:none; border-radius:6px; cursor:pointer;">
+            Submit Report for Review
+          </button>
+        </div>
+      </form>
+
+      <div id="submit-message" style="margin-top:15px; text-align:center; font-weight:bold; color:#28a745; display:none;">
+        Report submitted successfully — awaiting moderation.
       </div>
     </div>
-
-    <!-- Optional future fields -->
-    <!-- <label for="photo">Photo URL (optional, public link)</label>
-         <input type="url" id="photo" name="photo" placeholder="https://i.imgur.com/..."> -->
-
-    <div style="margin:15px 0;">
-  <label>Attach Photos (up to 3)</label>
-  <input type="file" id="photo1" accept="image/*"><br>
-  <input type="file" id="photo2" accept="image/*"><br>
-  <input type="file" id="photo3 " accept="image/*">
-</div>
-
-    
-    
-
-    <div style="text-align: center; margin-top: 25px;">
-      <button type="submit" class="submit-btn" style="background:#007bff; color:white; padding:12px 30px; font-size:1.1em; border:none; border-radius:6px; cursor:pointer;">
-        Submit Report for Review
-      </button>
-    </div>
-  </form>
-
-  <div id="submit-message" style="margin-top:15px; text-align:center; font-weight:bold; color:#28a745; display:none;">
-    Report submitted successfully — awaiting moderation.
-  </div>
-</div>
-  </details>
+  </details> <!-- added missing closing tag -->
 
   <script src="js/map.js"></script>
   <script src="js/public.js"></script>
 
   <!-- Click-to-Report Confirmation Modal -->
-<div id="add-report-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.65); z-index:2000; justify-content:center; align-items:center; font-family:Arial,Helvetica,sans-serif;">
-  <div style="background:#fff; padding:28px; border-radius:10px; max-width:460px; width:92%; box-shadow:0 12px 40px rgba(0,0,0,0.35);">
-    <h3 style="margin-top:0; color:#1a3c6d;">Add new report at this location?</h3>
-    
-    <p style="margin:18px 0; font-size:1.05em;">
-      Coordinates selected on map:
-    </p>
-    
-    <p id="modal-coords-display" style="font-family:monospace; background:#f8f9fa; padding:12px; border-radius:6px; border:1px solid #dee2e6; white-space:pre; margin:0 0 24px 0;">
-      Latitude: —\nLongitude: —
-    </p>
-    
-    <div style="display:flex; gap:16px; justify-content:flex-end;">
-      <button id="modal-cancel-btn" style="padding:10px 22px; background:#6c757d; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:bold;">
-        Cancel
-      </button>
-      <button id="modal-confirm-btn" style="padding:10px 22px; background:#007bff; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:bold;">
-        Yes – fill form
-      </button>
+  <div id="add-report-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.65); z-index:2000; justify-content:center; align-items:center; font-family:Arial,Helvetica,sans-serif;">
+    <div style="background:#fff; padding:28px; border-radius:10px; max-width:460px; width:92%; box-shadow:0 12px 40px rgba(0,0,0,0.35);">
+      <h3 style="margin-top:0; color:#1a3c6d;">Add new report at this location?</h3>
+      
+      <p style="margin:18px 0; font-size:1.05em;">
+        Coordinates selected on map:
+      </p>
+      
+      <p id="modal-coords-display" style="font-family:monospace; background:#f8f9fa; padding:12px; border-radius:6px; border:1px solid #dee2e6; white-space:pre; margin:0 0 24px 0;">
+        Latitude: —\nLongitude: —
+      </p>
+      
+      <div style="display:flex; gap:16px; justify-content:flex-end;">
+        <button id="modal-cancel-btn" style="padding:10px 22px; background:#6c757d; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:bold;">
+          Cancel
+        </button>
+        <button id="modal-confirm-btn" style="padding:10px 22px; background:#007bff; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:bold;">
+          Yes – fill form
+        </button>
+      </div>
     </div>
   </div>
-</div>
 </body>
 </html>
