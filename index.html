@@ -19,9 +19,58 @@
 
   <!-- Filters + Submit -->
   <details style="max-width:800px;margin:20px auto;background:white;padding:15px;border-radius:8px">
-    <summary>Filters + Submit New Report (anonymous)</summary>
-    <!-- Your existing filters + new simple form -->
-    <button onclick="submitReport()">Submit Anonymous Report → Pending Review</button>
+    <!-- Public Submit Form -->
+<div style="max-width: 700px; margin: 30px auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+  <h2 style="text-align: center; color: #1a3c6d;">Submit New Report (Anonymous)</h2>
+  <p style="text-align: center; color: #555; font-size: 0.95em;">
+    Your report will be reviewed before appearing on the map.
+  </p>
+
+  <form id="submit-report-form">
+    <label for="type">Incident Type *</label>
+    <select id="type" name="type" required>
+      <option value="">-- Select type --</option>
+      <option value="crime">Crime (theft, hijacking, shooting, etc.)</option>
+      <option value="protest">Protest / March / Demonstration</option>
+      <option value="mass-action">Mass Action / Strike / Blockade</option>
+      <option value="riot">Riot / Looting / Civil Unrest</option>
+      <option value="disruption">Major Disruption (road block, shutdown)</option>
+      <option value="suspicious">Suspicious Activity / Gathering</option>
+      <option value="other">Other</option>
+    </select>
+
+    <label for="area">Area / Suburb / Landmark *</label>
+    <input type="text" id="area" name="area" placeholder="e.g. Durban CBD, Umlazi V, Pinetown" required>
+
+    <label for="description">Description of what you saw / heard *</label>
+    <textarea id="description" name="description" rows="5" placeholder="What happened? When? Any details..." required></textarea>
+
+    <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+      <div style="flex: 1;">
+        <label for="lat">Approximate Latitude (optional)</label>
+        <input type="number" step="any" id="lat" name="lat" placeholder="-29.858">
+      </div>
+      <div style="flex: 1;">
+        <label for="lng">Approximate Longitude (optional)</label>
+        <input type="number" step="any" id="lng" name="lng" placeholder="31.021">
+      </div>
+    </div>
+
+    <!-- Optional future fields -->
+    <!-- <label for="photo">Photo URL (optional, public link)</label>
+         <input type="url" id="photo" name="photo" placeholder="https://i.imgur.com/..."> -->
+
+    <div style="text-align: center; margin-top: 25px;">
+      <button type="submit" class="submit-btn" style="background:#007bff; color:white; padding:12px 30px; font-size:1.1em; border:none; border-radius:6px; cursor:pointer;">
+        Submit Report for Review
+      </button>
+    </div>
+  </form>
+
+  <div id="submit-message" style="margin-top:15px; text-align:center; font-weight:bold; color:#28a745; display:none;">
+    Report submitted successfully — awaiting moderation.
+  </div>
+</div>
   </details>
 
   <script src="js/map.js"></script>
