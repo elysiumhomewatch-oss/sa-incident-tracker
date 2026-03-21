@@ -1,15 +1,20 @@
 /* sa-incident-tracker/css/style.css */
-/* AfriForum-inspired styling: red accents, dark text, clean Proxima Nova feel */
+/* AfriForum brand styling – red primary, orange & green accents, no white page background */
 
 @import url('https://fonts.googleapis.com/css2?family=Proxima+Nova:wght@400;500;600;700&display=swap');
 
 :root {
-  --afriforum-red:     #C8102E;
-  --afriforum-dark:    #1A1A1A;
-  --afriforum-grey:    #4D4D4D;
-  --light-bg:          #F8F9FA;
-  --card-bg:           #FFFFFF;
-  --border-light:      #DEE2E6;
+  --afriforum-red:      #C8102E;
+  --afriforum-orange:   #F15A24;     /* flame/orange accent */
+  --afriforum-green:    #006633;     /* wreath/green accent */
+  --afriforum-dark:     #000000;
+  --afriforum-grey:     #4D4D4D;
+  --page-bg:            #F8F8F8;     /* warm light grey – no pure white */
+  --card-bg:            #FFFFFF;
+  --border:             #D0D0D0;
+  --hover-red:          #A80D26;
+  --hover-orange:       #E04E1E;
+  --hover-green:        #005229;
 }
 
 * {
@@ -19,22 +24,159 @@
 body {
   font-family: 'Proxima Nova', Arial, Helvetica, sans-serif;
   margin: 0;
-  padding: 20px;
-  background: var(--light-bg);
+  padding: 20px 15px;
+  background: var(--page-bg);
   color: var(--afriforum-dark);
   line-height: 1.6;
 }
 
 h1, h2, h3 {
-  color: var(--afriforum-dark);
+  color: var(--afriforum-red);
   font-weight: 700;
+  margin: 0.5em 0;
 }
 
 h1 {
   text-align: center;
+  font-size: 2.4rem;
+  margin-bottom: 0.8em;
+  letter-spacing: -0.5px;
+}
+
+#map {
+  height: 620px;
+  margin: 25px auto;
+  max-width: 1400px;
+  border: 3px solid var(--afriforum-red);
+  border-radius: 10px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+  background: #fff; /* map needs white base */
+}
+
+table {
+  width: 100%;
+  max-width: 1400px;
+  margin: 30px auto;
+  border-collapse: collapse;
+  background: var(--card-bg);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+th, td {
+  padding: 14px 12px;
+  border: 1px solid var(--border);
+  text-align: left;
+}
+
+th {
+  background: var(--afriforum-red);
+  color: white;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.95em;
+  letter-spacing: 0.6px;
+}
+
+tr.pending {
+  background: rgba(241,90,36,0.12) !important; /* light orange tint for pending */
+  font-weight: 600;
+}
+
+tr.approved {
+  background: rgba(0,102,51,0.08) !important; /* very light green tint */
+}
+
+button {
+  padding: 10px 18px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  font-size: 0.95em;
+}
+
+.approve-btn {
+  background: var(--afriforum-green);
+  color: white;
+}
+
+.reject-btn {
+  background: var(--afriforum-red);
+  color: white;
+}
+
+.blur-btn {
+  background: var(--afriforum-orange);
+  color: white;
+}
+
+.submit-btn {
+  background: var(--afriforum-red);
+  color: white;
+  padding: 14px 36px;
+  font-size: 1.15em;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(200,16,46,0.35);
+}
+
+.submit-btn:hover {
+  background: var(--hover-red);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(200,16,46,0.45);
+}
+
+#pending-count {
+  font-size: 1.6em;
+  font-weight: 700;
   color: var(--afriforum-red);
-  margin-bottom: 0.6em;
-  font-size: 2.2rem;
+  text-align: center;
+  margin: 25px 0;
+  background: rgba(200,16,46,0.08);
+  padding: 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(200,16,46,0.15);
+}
+
+form label {
+  display: block;
+  margin: 1.4em 0 0.6em;
+  font-weight: 600;
+  color: var(--afriforum-dark);
+}
+
+form input, form textarea, form select {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 1em;
+  background: #fff;
+  transition: border-color 0.25s, box-shadow 0.25s;
+}
+
+form input:focus, form textarea:focus, form select:focus {
+  border-color: var(--afriforum-red);
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(200,16,46,0.18);
+}
+
+/* Modal / popup enhancements */
+#blur-modal, #add-report-modal {
+  font-family: 'Proxima Nova', Arial, sans-serif;
+}
+
+#blur-content, #add-report-modal div {
+  border: 2px solid var(--afriforum-red);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.25);
+}
+
+/* Orange & green accents on hover/focus */
+button:hover {
+  filter: brightness(1.1);
+  }  font-size: 2.2rem;
 }
 
 #map {
