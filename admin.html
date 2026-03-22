@@ -72,22 +72,42 @@
   <div id="pending-count">Pending reports: 0</div>
 
   <div id="map"></div>
-  <details style="max-width:1400px; margin:20px auto; background:white; padding:15px; border-radius:8px;">
-  <summary style="font-weight:bold; cursor:pointer; color:#C8102E;">Live Public Traffic Cams – Durban / KZN</summary>
-  <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(320px, 1fr)); gap:15px; margin-top:15px;">
-    <!-- Example – replace with real public URLs you find -->
-    <div>
-      <h4>N3 Mariannhill Toll</h4>
-      <iframe src="https://example.com/n3-mariannhill-live" width="100%" height="240" frameborder="0"></iframe>
+  <details style="max-width:1400px; margin:30px auto; background:white; padding:20px; border-radius:10px; box-shadow:0 2px 10px rgba(0,0,0,0.1);">
+  <summary style="font-size:1.3em; font-weight:bold; color:#C8102E; cursor:pointer;">
+    Live KZN Traffic Cameras – Quick Visual Check
+  </summary>
+
+  <!-- Horizontal scrolling camera row -->
+  <div style="margin-top:20px;">
+    <div id="camera-scroll-container" style="display:flex; overflow-x:auto; gap:20px; padding-bottom:10px; white-space:nowrap;">
+      <!-- Cameras will be dynamically inserted here by JS -->
     </div>
-    <div>
-      <h4>Durban CBD – West Street</h4>
-      <iframe src="https://example.com/durban-west-st-live" width="100%" height="240" frameborder="0"></iframe>
-    </div>
-    <!-- Add 4–8 more -->
   </div>
-  <p style="margin-top:15px; font-size:0.9em; color:#666;">
-    These are public feeds from municipal/SANRAL sources. If a cam is offline, try refreshing or finding alternatives on <a href="https://www.arrivealive.mobi/live-traffic-cameras" target="_blank">Arrive Alive</a> or eThekwini site.
+
+  <!-- Add new camera form -->
+  <div style="margin-top:30px; padding:15px; background:#f9f9f9; border-radius:8px;">
+    <h4 style="margin-top:0; color:#006633;">Add New Public Camera</h4>
+    <form id="add-camera-form">
+      <div style="display:flex; gap:15px; flex-wrap:wrap;">
+        <div style="flex:1; min-width:200px;">
+          <label for="cam-name">Name / Location</label>
+          <input type="text" id="cam-name" name="name" placeholder="e.g. N3 Mariannhill Toll" required style="width:100%; padding:8px;">
+        </div>
+        <div style="flex:2; min-width:300px;">
+          <label for="cam-url">Direct Image URL</label>
+          <input type="url" id="cam-url" name="url" placeholder="https://www.i-traffic.co.za/map/Cctv/XXXX" required style="width:100%; padding:8px;">
+        </div>
+      </div>
+      <button type="submit" style="margin-top:15px; background:#006633; color:white; padding:10px 20px; border:none; border-radius:6px; cursor:pointer;">
+        Add Camera
+      </button>
+    </form>
+  </div>
+
+  <p style="margin-top:20px; font-size:0.95em; color:#555;">
+    These are public snapshot feeds (refresh every 60 seconds). To find more, visit 
+    <a href="http://www.i-traffic.co.za/cctv" target="_blank" style="color:#C8102E;">i-traffic CCTV List</a> 
+    and filter by KwaZulu-Natal.
   </p>
 </details>
 
