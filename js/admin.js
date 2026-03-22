@@ -1,4 +1,4 @@
-// sa-incident-tracker/js/admin.js..
+// sa-incident-tracker/js/admin.js
 
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxwR8LmQ1zBjLWJVu9gXGwwT2wyXSsp3q4WcQT1Rb6dRIk9gvbiiZNJbUcwttMQ4ostdQ/exec";
 
@@ -41,11 +41,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Blur modal controls
-  document.getElementById('cancel-blur')?.addEventListener('click', closeBlurModal);
-  document.getElementById('clear-rects')?.addEventListener('click', clearRects);
-  document.getElementById('apply-blur')?.addEventListener('click', applyBlurCurrentPhoto);
-  document.getElementById('save-all-close')?.addEventListener('click', saveAllAndClose);
+  // Blur modal controls – safe binding
+  const cancelBtn = document.getElementById('cancel-blur');
+  const clearBtn = document.getElementById('clear-rects');
+  const applyBtn = document.getElementById('apply-blur');
+  const saveAllBtn = document.getElementById('save-all-close');
+
+  if (cancelBtn) cancelBtn.addEventListener('click', closeBlurModal);
+  if (clearBtn) clearBtn.addEventListener('click', clearRects);
+  if (applyBtn) applyBtn.addEventListener('click', applyBlurCurrentPhoto);
+  if (saveAllBtn) saveAllBtn.addEventListener('click', saveAllAndClose);
 });
 
 async function loadAllAlerts() {
@@ -66,6 +71,8 @@ async function loadAllAlerts() {
 
 function renderTable() {
   const tbody = document.getElementById('alert-table-body');
+  if (!tbody) return; // safety
+
   tbody.innerHTML = '';
 
   allAlerts.forEach(alert => {
@@ -170,8 +177,6 @@ function renderMarkers() {
 }
 
 // ────────────────────────────────────────────────
-// Blur Editor – supports multiple photos
-// ────────────────────────────────────────────────
 // Blur Editor – supports multiple photos with navigation
 // ────────────────────────────────────────────────
 function openBlurEditor(alert) {
@@ -191,12 +196,18 @@ function openBlurEditor(alert) {
     return;
   }
 
-  document.getElementById('total-photos').textContent = photoUrls.length;
+  const totalEl = document.getElementById('total-photos');
+  if (totalEl) totalEl.textContent = photoUrls.length;
+
   updatePhotoDisplay();
 
   modal.style.display = 'flex';
 
   canvas = document.getElementById('blur-canvas');
+  if (!canvas) {
+    console.error("Canvas element not found");
+    return;
+  }
   ctx = canvas.getContext('2d');
 
   // Mouse drawing events
@@ -227,36 +238,43 @@ function openBlurEditor(alert) {
 
   canvas.onmouseout = () => { isDrawing = false; };
 
-  // Navigation buttons – enable/disable based on position
+  // Navigation buttons
   const prevBtn = document.getElementById('prev-photo');
   const nextBtn = document.getElementById('next-photo');
 
-  prevBtn.onclick = () => {
-    if (currentPhotoIndex > 0) {
-      currentPhotoIndex--;
-      updatePhotoDisplay();
-    }
-  };
+  if (prevBtn) {
+    prevBtn.onclick = () => {
+      if (currentPhotoIndex > 0) {
+        currentPhotoIndex--;
+        updatePhotoDisplay();
+      }
+    };
+  }
 
-  nextBtn.onclick = () => {
-    if (currentPhotoIndex < photoUrls.length - 1) {
-      currentPhotoIndex++;
-      updatePhotoDisplay();
-    }
-  };
+  if (nextBtn) {
+    nextBtn.onclick = () => {
+      if (currentPhotoIndex < photoUrls.length - 1) {
+        currentPhotoIndex++;
+        updatePhotoDisplay();
+      }
+    };
+  }
 
-  // Update button states on open and navigation
+  // Other modal buttons
+  document.getElementById('cancel-blur')?.onclick = closeBlurModal;
+  document.getElementById('clear-rects')?.onclick = clearRects;
+  document.getElementById('apply-blur')?.onclick = applyBlurCurrentPhoto;
+  document.getElementById('save-all-close')?.onclick = saveAllAndClose;
+
+  // Initial button state
   updateNavButtons();
-
-  document.getElementById('cancel-blur').onclick = closeBlurModal;
-  document.getElementById('clear-rects').onclick = clearRects;
-  document.getElementById('apply-blur').onclick = applyBlurCurrentPhoto;
-  document.getElementById('save-all-close').onclick = saveAllAndClose;
 }
 
 function updatePhotoDisplay() {
-  document.getElementById('current-photo-index').textContent = currentPhotoIndex + 1;
-  rects = []; // reset per photo
+  const indexEl = document.getElementById('current-photo-index');
+  if (indexEl) indexEl.textContent = currentPhotoIndex + 1;
+
+  rects = []; // reset rects for new photo
   loadAndDrawImage(photoUrls[currentPhotoIndex]);
   updateNavButtons();
 }
@@ -266,15 +284,17 @@ function updateNavButtons() {
   const nextBtn = document.getElementById('next-photo');
 
   if (prevBtn) {
-    prevBtn.disabled = currentPhotoIndex === 0;
-    prevBtn.style.opacity = currentPhotoIndex === 0 ? '0.5' : '1';
-    prevBtn.style.cursor = currentPhotoIndex === 0 ? 'not-allowed' : 'pointer';
+    const disabled = currentPhotoIndex === 0;
+    prevBtn.disabled = disabled;
+    prevBtn.style.opacity = disabled ? '0.5' : '1';
+    prevBtn.style.cursor = disabled ? 'not-allowed' : 'pointer';
   }
 
   if (nextBtn) {
-    nextBtn.disabled = currentPhotoIndex === photoUrls.length - 1;
-    nextBtn.style.opacity = currentPhotoIndex === photoUrls.length - 1 ? '0.5' : '1';
-    nextBtn.style.cursor = currentPhotoIndex === photoUrls.length - 1 ? 'not-allowed' : 'pointer';
+    const disabled = currentPhotoIndex === photoUrls.length - 1;
+    nextBtn.disabled = disabled;
+    nextBtn.style.opacity = disabled ? '0.5' : '1';
+    nextBtn.style.cursor = disabled ? 'not-allowed' : 'pointer';
   }
 }
 
@@ -364,7 +384,7 @@ async function applyBlurCurrentPhoto() {
 
         if (updateJson.success) {
           alert("Sheet updated with blurred photo!");
-          loadAllAlerts();
+          loadAllAlerts(); // refresh
         } else {
           alert("Sheet update failed: " + (updateJson.error || "Unknown"));
         }
@@ -383,9 +403,10 @@ async function saveAllAndClose() {
     closeBlurModal();
     loadAllAlerts();
   }
-
+}
 
 function closeBlurModal() {
-  document.getElementById('blur-modal').style.display = 'none';
+  const modal = document.getElementById('blur-modal');
+  if (modal) modal.style.display = 'none';
   rects = [];
-}}
+}
