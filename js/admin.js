@@ -172,6 +172,8 @@ function renderMarkers() {
 // ────────────────────────────────────────────────
 // Blur Editor – supports multiple photos
 // ────────────────────────────────────────────────
+// Blur Editor – supports multiple photos with navigation
+// ────────────────────────────────────────────────
 function openBlurEditor(alert) {
   currentEditingAlert = alert;
   currentPhotoIndex = 0;
@@ -197,7 +199,7 @@ function openBlurEditor(alert) {
   canvas = document.getElementById('blur-canvas');
   ctx = canvas.getContext('2d');
 
-  // Mouse events
+  // Mouse drawing events
   canvas.onmousedown = (e) => {
     isDrawing = true;
     startX = e.offsetX;
@@ -224,12 +226,56 @@ function openBlurEditor(alert) {
   };
 
   canvas.onmouseout = () => { isDrawing = false; };
+
+  // Navigation buttons – enable/disable based on position
+  const prevBtn = document.getElementById('prev-photo');
+  const nextBtn = document.getElementById('next-photo');
+
+  prevBtn.onclick = () => {
+    if (currentPhotoIndex > 0) {
+      currentPhotoIndex--;
+      updatePhotoDisplay();
+    }
+  };
+
+  nextBtn.onclick = () => {
+    if (currentPhotoIndex < photoUrls.length - 1) {
+      currentPhotoIndex++;
+      updatePhotoDisplay();
+    }
+  };
+
+  // Update button states on open and navigation
+  updateNavButtons();
+
+  document.getElementById('cancel-blur').onclick = closeBlurModal;
+  document.getElementById('clear-rects').onclick = clearRects;
+  document.getElementById('apply-blur').onclick = applyBlurCurrentPhoto;
+  document.getElementById('save-all-close').onclick = saveAllAndClose;
 }
 
 function updatePhotoDisplay() {
   document.getElementById('current-photo-index').textContent = currentPhotoIndex + 1;
-  rects = []; // Reset rectangles for each photo
+  rects = []; // reset per photo
   loadAndDrawImage(photoUrls[currentPhotoIndex]);
+  updateNavButtons();
+}
+
+function updateNavButtons() {
+  const prevBtn = document.getElementById('prev-photo');
+  const nextBtn = document.getElementById('next-photo');
+
+  if (prevBtn) {
+    prevBtn.disabled = currentPhotoIndex === 0;
+    prevBtn.style.opacity = currentPhotoIndex === 0 ? '0.5' : '1';
+    prevBtn.style.cursor = currentPhotoIndex === 0 ? 'not-allowed' : 'pointer';
+  }
+
+  if (nextBtn) {
+    nextBtn.disabled = currentPhotoIndex === photoUrls.length - 1;
+    nextBtn.style.opacity = currentPhotoIndex === photoUrls.length - 1 ? '0.5' : '1';
+    nextBtn.style.cursor = currentPhotoIndex === photoUrls.length - 1 ? 'not-allowed' : 'pointer';
+  }
 }
 
 function loadAndDrawImage(url) {
@@ -333,7 +379,7 @@ async function applyBlurCurrentPhoto() {
 }
 
 async function saveAllAndClose() {
-  if (confirm("Save all changes and close? (Current photo already saved)")) {
+  if (confirm("Save all changes and close?")) {
     closeBlurModal();
     loadAllAlerts();
   }
@@ -342,4 +388,4 @@ async function saveAllAndClose() {
 function closeBlurModal() {
   document.getElementById('blur-modal').style.display = 'none';
   rects = [];
-}
+}}
