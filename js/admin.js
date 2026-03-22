@@ -4,21 +4,20 @@ const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxwR8LmQ1zBjLWJVu9gX
 
 let allAlerts = [];
 let currentEditingAlert = null;
+let currentPhotoUrls = [];
 let currentPhotoIndex = 0;
-let photoUrls = [];
-let rects = []; // rectangles for current photo only
 let canvas = null;
 let ctx = null;
 let isDrawing = false;
 let startX, startY;
-let currentImage = null;
+let rects = [];
 
 // Simple auth check
 function checkAdminAuth() {
   const auth = localStorage.getItem('adminAuth');
   if (!auth) {
     const password = prompt("Enter admin password:");
-    if (password !== "test") { // ← CHANGE THIS to a real password
+    if (password !== "test") { // ← CHANGE THIS
       alert("Access denied");
       window.location.href = "index.html";
       return false;
@@ -41,16 +40,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Blur modal controls – safe binding
-  const cancelBtn = document.getElementById('cancel-blur');
-  const clearBtn = document.getElementById('clear-rects');
-  const applyBtn = document.getElementById('apply-blur');
-  const saveAllBtn = document.getElementById('save-all-close');
-
-  if (cancelBtn) cancelBtn.addEventListener('click', closeBlurModal);
-  if (clearBtn) clearBtn.addEventListener('click', clearRects);
-  if (applyBtn) applyBtn.addEventListener('click', applyBlurCurrentPhoto);
-  if (saveAllBtn) saveAllBtn.addEventListener('click', saveAllAndClose);
+  // Blur modal controls
+  document.getElementById('cancel-blur')?.addEventListener('click', closeBlurModal);
+  document.getElementById('clear-rects')?.addEventListener('click', clearRects);
+  document.getElementById('apply-blur')?.addEventListener('click', applyBlur);
+  document.getElementById('prev-photo')?.addEventListener('click', () => navigatePhoto(-1));
+  document.getElementById('next-photo')?.addEventListener('click', () => navigatePhoto(1));
 });
 
 async function loadAllAlerts() {
@@ -71,22 +66,11 @@ async function loadAllAlerts() {
 
 function renderTable() {
   const tbody = document.getElementById('alert-table-body');
-  if (!tbody) return;
-
   tbody.innerHTML = '';
 
   allAlerts.forEach(alert => {
-    const status = alert.status || '';
-
-    // Compute selected attributes safely outside the string
-    const isPending    = status === 'pending'    ? 'selected' : '';
-    const isApproved   = status === 'approved'   ? 'selected' : '';
-    const isRejected   = status === 'rejected'   ? 'selected' : '';
-    const isInProgress = status === 'in-progress' ? 'selected' : '';
-    const isResolved   = status === 'resolved'   ? 'selected' : '';
-
     const tr = document.createElement('tr');
-    tr.className = status.toLowerCase() || '';
+    tr.className = alert.status?.toLowerCase() || '';
     tr.innerHTML = `
       <td>${alert.timestamp || '—'}</td>
       <td>${alert.type || 'other'}</td>
@@ -109,24 +93,23 @@ function renderTable() {
 
       <td>
         <select class="status-select" data-row="${alert.row}">
-          <option value="pending"    ${isPending}>Pending</option>
-          <option value="approved"   ${isApproved}>Approved</option>
-          <option value="rejected"   ${isRejected}>Rejected</option>
-          <option value="in-progress" ${isInProgress}>In Progress</option>
-          <option value="resolved"   ${isResolved}>Resolved</option>
+          <option value="pending"    ${alert.status==='pending'?'selected':''}>Pending</option>
+          <option value="approved"   ${alert.status==='approved'?'selected':''}>Approved</option>
+          <option value="rejected"   ${alert.status==='rejected'?'selected':''}>Rejected</option>
+          <option value="in-progress" ${alert.status==='in-progress'?'selected':''}>In Progress</option>
+          <option value="resolved"   ${alert.status==='resolved'?'selected':''}>Resolved</option>
         </select>
       </td>
-
       <td>
         <button class="approve-btn" data-row="${alert.row}">Approve</button>
         <button class="reject-btn"  data-row="${alert.row}">Reject</button>
-        ${alert.photos ? `<button class="blur-btn" data-row="${alert.row}" data-alert='${JSON.stringify(alert)}'>Blur Images</button>` : ''}
+        <button class="blur-btn" data-row="${alert.row}" data-alert='${JSON.stringify(alert)}'>Blur Images</button>
       </td>
     `;
     tbody.appendChild(tr);
   });
 
-  // Status dropdown & quick buttons
+  // Status & quick buttons
   document.querySelectorAll('.status-select').forEach(sel => {
     sel.addEventListener('change', () => updateStatus(sel.dataset.row, sel.value));
   });
@@ -139,7 +122,7 @@ function renderTable() {
     btn.addEventListener('click', () => updateStatus(btn.dataset.row, 'rejected'));
   });
 
-  // Blur button – open editor only if photos exist
+  // Blur button
   document.querySelectorAll('.blur-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const alertData = JSON.parse(btn.dataset.alert);
@@ -161,7 +144,7 @@ async function updateStatus(row, newStatus) {
     const res = await fetch(`${SCRIPT_URL}?${params}`);
     const data = await res.json();
     if (data.success) {
-      loadAllAlerts(); // refresh
+      loadAllAlerts();
     } else {
       alert("Update failed: " + (data.error || "Unknown"));
     }
@@ -187,7 +170,7 @@ function renderMarkers() {
 }
 
 // ────────────────────────────────────────────────
-// Blur Editor – supports multiple photos with navigation
+// Blur Editor Modal Logic
 // ────────────────────────────────────────────────
 function openBlurEditor(alert) {
   currentEditingAlert = alert;
@@ -195,30 +178,31 @@ function openBlurEditor(alert) {
   rects = [];
 
   const modal = document.getElementById('blur-modal');
+  const indexEl = document.getElementById('current-photo-index');
+  const totalEl = document.getElementById('total-photos');
+
   if (!modal) {
     alert("Blur modal not found in page.");
     return;
   }
 
-  photoUrls = alert.photos ? alert.photos.split(',').map(u => u.trim()).filter(Boolean) : [];
-  if (photoUrls.length === 0) {
-    alert("No photos to edit in this report.");
+  if (!alert.photos || !alert.photos.trim()) {
+    alert("No photos in this report.");
     return;
   }
 
-  const totalEl = document.getElementById('total-photos');
-  if (totalEl) totalEl.textContent = photoUrls.length;
+  currentPhotoUrls = alert.photos.split(',').map(u => u.trim()).filter(Boolean);
+  if (currentPhotoUrls.length === 0) return;
 
+  totalEl.textContent = currentPhotoUrls.length;
   updatePhotoDisplay();
 
   modal.style.display = 'flex';
 
   canvas = document.getElementById('blur-canvas');
-  if (!canvas) {
-    console.error("Canvas element not found");
-    return;
-  }
   ctx = canvas.getContext('2d');
+
+  loadAndDrawCurrentPhoto();
 
   // Mouse drawing events
   canvas.onmousedown = (e) => {
@@ -247,74 +231,23 @@ function openBlurEditor(alert) {
   };
 
   canvas.onmouseout = () => { isDrawing = false; };
-
-  // Navigation buttons
-  const prevBtn = document.getElementById('prev-photo');
-  const nextBtn = document.getElementById('next-photo');
-
-  if (prevBtn) {
-    prevBtn.onclick = () => {
-      if (currentPhotoIndex > 0) {
-        currentPhotoIndex--;
-        updatePhotoDisplay();
-      }
-    };
-  }
-
-  if (nextBtn) {
-    nextBtn.onclick = () => {
-      if (currentPhotoIndex < photoUrls.length - 1) {
-        currentPhotoIndex++;
-        updatePhotoDisplay();
-      }
-    };
-  }
-
-  // Other modal buttons
-  document.getElementById('cancel-blur')?.onclick = closeBlurModal;
-  document.getElementById('clear-rects')?.onclick = clearRects;
-  document.getElementById('apply-blur')?.onclick = applyBlurCurrentPhoto;
-  document.getElementById('save-all-close')?.onclick = saveAllAndClose;
-
-  // Initial button state
-  updateNavButtons();
 }
 
 function updatePhotoDisplay() {
-  const indexEl = document.getElementById('current-photo-index');
-  if (indexEl) indexEl.textContent = currentPhotoIndex + 1;
-
-  rects = []; // reset per photo
-  loadAndDrawImage(photoUrls[currentPhotoIndex]);
-  updateNavButtons();
+  document.getElementById('current-photo-index').textContent = currentPhotoIndex + 1;
+  document.getElementById('prev-photo').disabled = currentPhotoIndex === 0;
+  document.getElementById('next-photo').disabled = currentPhotoIndex === currentPhotoUrls.length - 1;
 }
 
-function updateNavButtons() {
-  const prevBtn = document.getElementById('prev-photo');
-  const nextBtn = document.getElementById('next-photo');
-
-  if (prevBtn) {
-    const disabled = currentPhotoIndex === 0;
-    prevBtn.disabled = disabled;
-    prevBtn.style.opacity = disabled ? '0.5' : '1';
-    prevBtn.style.cursor = disabled ? 'not-allowed' : 'pointer';
-  }
-
-  if (nextBtn) {
-    const disabled = currentPhotoIndex === photoUrls.length - 1;
-    nextBtn.disabled = disabled;
-    nextBtn.style.opacity = disabled ? '0.5' : '1';
-    nextBtn.style.cursor = disabled ? 'not-allowed' : 'pointer';
-  }
-}
-
-function loadAndDrawImage(url) {
+function loadAndDrawCurrentPhoto() {
+  const url = currentPhotoUrls[currentPhotoIndex];
   currentImage = new Image();
   currentImage.crossOrigin = "anonymous";
   currentImage.onload = () => {
     canvas.width = currentImage.width;
     canvas.height = currentImage.height;
     ctx.drawImage(currentImage, 0, 0);
+    rects = []; // reset rectangles for new photo
     redraw();
   };
   currentImage.onerror = () => {
@@ -328,7 +261,6 @@ function loadAndDrawImage(url) {
 }
 
 function redraw() {
-  if (!currentImage) return;
   ctx.drawImage(currentImage, 0, 0);
   ctx.strokeStyle = "red";
   ctx.lineWidth = 3;
@@ -349,7 +281,15 @@ function clearRects() {
   redraw();
 }
 
-async function applyBlurCurrentPhoto() {
+function navigatePhoto(direction) {
+  currentPhotoIndex += direction;
+  if (currentPhotoIndex < 0) currentPhotoIndex = 0;
+  if (currentPhotoIndex >= currentPhotoUrls.length) currentPhotoIndex = currentPhotoUrls.length - 1;
+  updatePhotoDisplay();
+  loadAndDrawCurrentPhoto();
+}
+
+async function applyBlur() {
   if (rects.length === 0) {
     alert("No areas selected to blur on this photo.");
     return;
@@ -366,7 +306,7 @@ async function applyBlurCurrentPhoto() {
     }
 
     const formData = new FormData();
-    formData.append("image", blob, `blurred-photo-${currentPhotoIndex + 1}.jpg`);
+    formData.append("image", blob, "blurred-photo.jpg");
     formData.append("key", "ccb5d3992f0066955a63d303a75c32a0");
 
     try {
@@ -375,26 +315,25 @@ async function applyBlurCurrentPhoto() {
 
       if (json.success) {
         const newUrl = json.data.url;
-        alert(`Blurred photo ${currentPhotoIndex + 1} uploaded!\nNew URL: ${newUrl}`);
+        alert("Blurred photo uploaded!\nNew URL: " + newUrl);
 
-        // Replace this photo's URL
-        const urls = currentEditingAlert.photos.split(',').map(u => u.trim());
-        urls[currentPhotoIndex] = newUrl;
-        currentEditingAlert.photos = urls.join(',');
+        // Replace this photo's URL in the list
+        currentPhotoUrls[currentPhotoIndex] = newUrl;
+        const updatedPhotos = currentPhotoUrls.join(',');
 
-        // Save to sheet
         const params = new URLSearchParams({
           action: 'update-photos',
           row: currentEditingAlert.row,
-          photos: currentEditingAlert.photos
+          photos: updatedPhotos
         });
 
-        const updateRes = await fetch(`${SCRIPT_URL}?${params}`);
+        const updateRes = await fetch(`${SCRIPT_URL}?${params.toString()}`);
         const updateJson = await updateRes.json();
 
         if (updateJson.success) {
           alert("Sheet updated with blurred photo!");
-          loadAllAlerts(); // refresh
+          loadAllAlerts();
+          closeBlurModal();
         } else {
           alert("Sheet update failed: " + (updateJson.error || "Unknown"));
         }
@@ -405,18 +344,13 @@ async function applyBlurCurrentPhoto() {
       console.error("Blur save error:", err);
       alert("Failed to save blurred photo – check console.");
     }
-  }, 'image/jpeg', 0.92);
-}
-
-async function saveAllAndClose() {
-  if (confirm("Save all changes and close?")) {
-    closeBlurModal();
-    loadAllAlerts();
-  }
+  }, 'image/jpeg', 0.9);
 }
 
 function closeBlurModal() {
-  const modal = document.getElementById('blur-modal');
-  if (modal) modal.style.display = 'none';
+  document.getElementById('blur-modal').style.display = 'none';
   rects = [];
+  currentEditingAlert = null;
+  currentPhotoUrls = [];
+  currentPhotoIndex = 0;
 }
