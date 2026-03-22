@@ -13,7 +13,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const form = document.getElementById('submit-report-form');
   const messageDiv = document.getElementById('submit-message');
 
-  // ────────────────────────────────────────────────
+ // ────────────────────────────────────────────────
+// Mobile-friendly photo upload – separate camera / gallery buttons
+// ────────────────────────────────────────────────
+
 if (form) {
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -25,25 +28,30 @@ if (form) {
     let photoUrls = [];
     let photoBlobs = [];
 
-    // Collect from all 3 inputs
-    const inputs = [
-      document.getElementById('photo1'),
-      document.getElementById('photo2'),
-      document.getElementById('photo3')
-    ];
+    // Collect from all three slots
+    const slots = [1, 2, 3];
 
-    for (let i = 0; i < inputs.length; i++) {
-      const input = inputs[i];
-      if (input && input.files && input.files.length > 0) {
-        const file = input.files[0];
-        console.log(`Photo ${i+1} selected: ${file.name}, size: ${(file.size / 1024).toFixed(1)} KB`);
+    for (let slot of slots) {
+      const cameraInput = document.getElementById(`photo${slot}-camera`);
+      const galleryInput = document.getElementById(`photo${slot}-gallery`);
+
+      // Check both inputs for selected file
+      let file = null;
+      if (cameraInput?.files?.length > 0) {
+        file = cameraInput.files[0];
+      } else if (galleryInput?.files?.length > 0) {
+        file = galleryInput.files[0];
+      }
+
+      if (file) {
+        console.log(`Photo ${slot} selected: ${file.name}, size: ${(file.size / 1024).toFixed(1)} KB`);
 
         // Resize & compress
         const resizedBlob = await resizeAndCompressImage(file, 800, 0.7);
         if (resizedBlob) {
           photoBlobs.push(resizedBlob);
 
-          // Show preview
+          // Show preview thumbnail
           const img = document.createElement('img');
           img.src = URL.createObjectURL(resizedBlob);
           img.style.width = '80px';
@@ -96,6 +104,7 @@ if (form) {
     // Build params
     const formData = new FormData(form);
     const params = new URLSearchParams();
+
     for (const [key, value] of formData.entries()) {
       params.append(key, value.trim());
     }
@@ -118,8 +127,11 @@ if (form) {
         messageDiv.style.display = "block";
         form.reset();
         previewDiv.innerHTML = '';
-        // Clear hidden inputs
-        inputs.forEach(input => input.value = '');
+        // Clear all hidden inputs
+        for (let slot = 1; slot <= 3; slot++) {
+          document.getElementById(`photo${slot}-camera`).value = '';
+          document.getElementById(`photo${slot}-gallery`).value = '';
+        }
       } else {
         messageDiv.textContent = "Submission failed: " + (result.error || "Unknown");
         messageDiv.style.color = "#dc3545";
@@ -133,6 +145,36 @@ if (form) {
     }
 
     setTimeout(() => { messageDiv.style.display = "none"; }, 8000);
+  });
+}
+
+// Resize and compress image client-side
+async function resizeAndCompressImage(file, maxWidth = 800, quality = 0.7) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      let width = img.width;
+      let height = img.height;
+
+      if (width > maxWidth) {
+        height = Math.round((height * maxWidth) / width);
+        width = maxWidth;
+      }
+
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, width, height);
+
+      canvas.toBlob(
+        (blob) => resolve(blob),
+        'image/jpeg',
+        quality
+      );
+    };
+    img.onerror = reject;
+    img.src = URL.createObjectURL(file);
   });
 }
 
