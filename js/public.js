@@ -23,22 +23,25 @@ if (form) {
     previewDiv.innerHTML = '';
 
     let photoUrls = [];
-    let photoBlobs = []; // resized blobs ready to upload
+    let photoBlobs = [];
 
-    // Collect from both inputs (camera and gallery)
-    const inputs = [document.getElementById('photo-input-1'), document.getElementById('photo-input-2')];
-    let photoCount = 0;
+    // Collect from all 3 inputs
+    const inputs = [
+      document.getElementById('photo1'),
+      document.getElementById('photo2'),
+      document.getElementById('photo3')
+    ];
 
-    for (let input of inputs) {
+    for (let i = 0; i < inputs.length; i++) {
+      const input = inputs[i];
       if (input && input.files && input.files.length > 0) {
         const file = input.files[0];
-        console.log(`Photo selected: ${file.name}, size: ${(file.size / 1024).toFixed(1)} KB`);
+        console.log(`Photo ${i+1} selected: ${file.name}, size: ${(file.size / 1024).toFixed(1)} KB`);
 
         // Resize & compress
-        const resizedBlob = await resizeAndCompressImage(file, 800, 0.7); // max 800px width, 70% quality
+        const resizedBlob = await resizeAndCompressImage(file, 800, 0.7);
         if (resizedBlob) {
           photoBlobs.push(resizedBlob);
-          photoCount++;
 
           // Show preview
           const img = document.createElement('img');
@@ -53,12 +56,12 @@ if (form) {
       }
     }
 
-    if (photoCount > 3) {
-      alert("Maximum 3 photos allowed. Only the first 3 will be used.");
+    if (photoBlobs.length > 3) {
+      alert("Maximum 3 photos allowed. Using first 3.");
       photoBlobs = photoBlobs.slice(0, 3);
     }
 
-    console.log(`Prepared ${photoBlobs.length} resized photos for upload`);
+    console.log(`Prepared ${photoBlobs.length} resized photos`);
 
     // Upload resized blobs
     for (let i = 0; i < photoBlobs.length; i++) {
@@ -75,13 +78,13 @@ if (form) {
         });
 
         const json = await res.json();
-        console.log(`ImgBB response for photo ${i+1}:`, json);
+        console.log(`ImgBB response photo ${i+1}:`, json);
 
         if (json.success && json.data?.url) {
           photoUrls.push(json.data.url);
           console.log(`Photo ${i+1} uploaded: ${json.data.url}`);
         } else {
-          console.error(`Photo ${i+1} upload failed:`, json.error);
+          console.error(`Photo ${i+1} failed:`, json.error);
           alert(`Photo ${i+1} upload failed – continuing without it.`);
         }
       } catch (err) {
@@ -93,7 +96,6 @@ if (form) {
     // Build params
     const formData = new FormData(form);
     const params = new URLSearchParams();
-
     for (const [key, value] of formData.entries()) {
       params.append(key, value.trim());
     }
@@ -116,6 +118,8 @@ if (form) {
         messageDiv.style.display = "block";
         form.reset();
         previewDiv.innerHTML = '';
+        // Clear hidden inputs
+        inputs.forEach(input => input.value = '');
       } else {
         messageDiv.textContent = "Submission failed: " + (result.error || "Unknown");
         messageDiv.style.color = "#dc3545";
@@ -129,6 +133,36 @@ if (form) {
     }
 
     setTimeout(() => { messageDiv.style.display = "none"; }, 8000);
+  });
+}
+
+// Resize and compress image client-side
+async function resizeAndCompressImage(file, maxWidth = 800, quality = 0.7) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      let width = img.width;
+      let height = img.height;
+
+      if (width > maxWidth) {
+        height = Math.round((height * maxWidth) / width);
+        width = maxWidth;
+      }
+
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, width, height);
+
+      canvas.toBlob(
+        (blob) => resolve(blob),
+        'image/jpeg',
+        quality
+      );
+    };
+    img.onerror = reject;
+    img.src = URL.createObjectURL(file);
   });
 }
 
