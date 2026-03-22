@@ -266,46 +266,67 @@ async function applyBlur() {
 
   // Apply blur to selected rectangles
   rects.forEach(r => {
-    StackBlur.canvasRGBA(canvas, r.x, r.y, r.w, r.h, 20); // 20 = blur radius
+    StackBlur.canvasRGBA(canvas, r.x, r.y, r.w, r.h, 20); // blur radius 20
   });
 
-  // Convert canvas to blob → upload to ImgBB
+  // Convert canvas to blob
   canvas.toBlob(async (blob) => {
+    if (!blob) {
+      alert("Failed to generate blurred image.");
+      return;
+    }
+
     const formData = new FormData();
-    formData.append("image", blob, "blurred.jpg");
+    formData.append("image", blob, "blurred-photo.jpg");
     formData.append("key", "ccb5d3992f0066955a63d303a75c32a0"); // your ImgBB key
 
     try {
-      const res = await fetch("https://api.imgbb.com/1/upload", { method: "POST", body: formData });
-      const json = await res.json();
+      console.log("Uploading blurred image to ImgBB...");
+      const uploadRes = await fetch("https://api.imgbb.com/1/upload", {
+        method: "POST",
+        body: formData
+      });
 
-      if (json.success) {
-        const newUrl = json.data.url;
-        alert("Blurred photo saved! New URL:\n" + newUrl);
+      const uploadJson = await uploadRes.json();
+      console.log("ImgBB upload result:", uploadJson);
 
-        // Update sheet – replace this photo's URL
-        const urls = currentEditingAlert.photos.split(',').map(u => u.trim());
-        urls[currentPhotoIndex] = newUrl;
-        const updatedPhotos = urls.join(',');
+      if (!uploadJson.success || !uploadJson.data?.url) {
+        throw new Error(uploadJson.error?.message || "Upload failed");
+      }
 
-        const params = new URLSearchParams({
-          action: 'update-photos',
-          row: currentEditingAlert.row,
-          photos: updatedPhotos
-        });
+      const newUrl = uploadJson.data.url;
+      alert("Blurred photo uploaded!\nNew URL: " + newUrl);
 
-        await fetch(`${SCRIPT_URL}?${params}`);
+      // Prepare update to sheet
+      const urls = currentEditingAlert.photos.split(',').map(u => u.trim()).filter(Boolean);
+      urls[currentPhotoIndex] = newUrl;
+      const updatedPhotos = urls.join(',');
+
+      console.log("Sending update to sheet:", { row: currentEditingAlert.row, photos: updatedPhotos });
+
+      const updateParams = new URLSearchParams({
+        action: 'update-photos',
+        row: currentEditingAlert.row,
+        photos: updatedPhotos
+      });
+
+      const updateRes = await fetch(`${SCRIPT_URL}?${updateParams.toString()}`);
+      const updateJson = await updateRes.json();
+
+      console.log("Sheet update response:", updateJson);
+
+      if (updateJson.success) {
         alert("Sheet updated with blurred photo!");
-        loadAllAlerts(); // refresh
+        loadAllAlerts(); // refresh table & map
         closeBlurModal();
       } else {
-        alert("Upload failed: " + (json.error?.message || "Unknown"));
+        alert("Sheet update failed: " + (updateJson.error || "Unknown error"));
       }
     } catch (err) {
-      console.error(err);
-      alert("Blur save failed – check console.");
+      console.error("Blur save error:", err);
+      alert("Failed to save blurred photo – check console.");
     }
-  }, 'image/jpeg', 0.9);
+  }, 'image/jpeg', 0.92); // high quality JPEG
 }
 
 function closeBlurModal() {
