@@ -31,6 +31,12 @@
       .submit-btn { width: 100%; }
       #submit-message { font-size: 1.1em; }
       label { font-size: 1.05em; }
+      .photo-slot { margin-bottom: 20px; }
+      .photo-buttons { flex-direction: column; gap: 10px; }
+    }
+    .photo-buttons button {
+      flex: 1;
+      min-height: 54px;
     }
   </style>
 </head>
@@ -79,41 +85,57 @@
           </div>
         </div>
 
-        <!-- Mobile-optimized photo upload -->
+        <!-- Mobile-optimized photo upload with separate buttons -->
         <div style="margin:25px 0;">
           <label style="display:block; font-weight:600; margin-bottom:12px;">Attach Photos (up to 3 – optional)</label>
 
-          <div style="display:flex; flex-direction:column; gap:14px;">
-            <!-- Photo 1 -->
-            <div>
-              <button type="button" onclick="document.getElementById('photo1').click()" 
-                      style="width:100%; padding:16px; background:#006633; color:white; border:none; border-radius:8px; font-size:1.1em; min-height:54px; box-shadow:0 2px 8px rgba(0,0,0,0.2);">
-                📸 Photo 1 – Take or Choose
+          <div class="photo-slot">
+            <div class="photo-buttons" style="display:flex; gap:10px;">
+              <button type="button" onclick="document.getElementById('photo1-camera').click()" 
+                      style="flex:1; padding:14px; background:#006633; color:white; border:none; border-radius:8px; font-size:1em; min-height:54px;">
+                📸 Photo 1 – Take Photo
               </button>
-              <input type="file" id="photo1" accept="image/*" capture="environment" style="display:none;">
+              <button type="button" onclick="document.getElementById('photo1-gallery').click()" 
+                      style="flex:1; padding:14px; background:#F15A24; color:white; border:none; border-radius:8px; font-size:1em; min-height:54px;">
+                🖼️ Photo 1 – Choose File
+              </button>
             </div>
+            <input type="file" id="photo1-camera" accept="image/*" capture="environment" style="display:none;">
+            <input type="file" id="photo1-gallery" accept="image/*" style="display:none;">
+          </div>
 
-            <!-- Photo 2 -->
-            <div>
-              <button type="button" onclick="document.getElementById('photo2').click()" 
-                      style="width:100%; padding:16px; background:#006633; color:white; border:none; border-radius:8px; font-size:1.1em; min-height:54px; box-shadow:0 2px 8px rgba(0,0,0,0.2);">
-                📸 Photo 2 – Take or Choose
+          <div class="photo-slot">
+            <div class="photo-buttons" style="display:flex; gap:10px;">
+              <button type="button" onclick="document.getElementById('photo2-camera').click()" 
+                      style="flex:1; padding:14px; background:#006633; color:white; border:none; border-radius:8px; font-size:1em; min-height:54px;">
+                📸 Photo 2 – Take Photo
               </button>
-              <input type="file" id="photo2" accept="image/*" capture="environment" style="display:none;">
+              <button type="button" onclick="document.getElementById('photo2-gallery').click()" 
+                      style="flex:1; padding:14px; background:#F15A24; color:white; border:none; border-radius:8px; font-size:1em; min-height:54px;">
+                🖼️ Photo 2 – Choose File
+              </button>
             </div>
+            <input type="file" id="photo2-camera" accept="image/*" capture="environment" style="display:none;">
+            <input type="file" id="photo2-gallery" accept="image/*" style="display:none;">
+          </div>
 
-            <!-- Photo 3 -->
-            <div>
-              <button type="button" onclick="document.getElementById('photo3').click()" 
-                      style="width:100%; padding:16px; background:#006633; color:white; border:none; border-radius:8px; font-size:1.1em; min-height:54px; box-shadow:0 2px 8px rgba(0,0,0,0.2);">
-                📸 Photo 3 – Take or Choose
+          <div class="photo-slot">
+            <div class="photo-buttons" style="display:flex; gap:10px;">
+              <button type="button" onclick="document.getElementById('photo3-camera').click()" 
+                      style="flex:1; padding:14px; background:#006633; color:white; border:none; border-radius:8px; font-size:1em; min-height:54px;">
+                📸 Photo 3 – Take Photo
               </button>
-              <input type="file" id="photo3" accept="image/*" capture="environment" style="display:none;">
+              <button type="button" onclick="document.getElementById('photo3-gallery').click()" 
+                      style="flex:1; padding:14px; background:#F15A24; color:white; border:none; border-radius:8px; font-size:1em; min-height:54px;">
+                🖼️ Photo 3 – Choose File
+              </button>
             </div>
+            <input type="file" id="photo3-camera" accept="image/*" capture="environment" style="display:none;">
+            <input type="file" id="photo3-gallery" accept="image/*" style="display:none;">
           </div>
 
           <!-- Preview area -->
-          <div id="photo-preview" style="display:flex; flex-wrap:wrap; gap:12px; margin-top:15px;"></div>
+          <div id="photo-preview" style="display:flex; flex-wrap:wrap; gap:12px; margin-top:20px;"></div>
         </div>
 
         <div style="text-align:center; margin-top:30px;">
