@@ -5,19 +5,20 @@ const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxwR8LmQ1zBjLWJVu9gX
 let allAlerts = [];
 let currentEditingAlert = null;
 let currentPhotoIndex = 0;
-let currentImage = null;
-let rects = [];
+let photoUrls = [];
+let rects = []; // rectangles for current photo only
 let canvas = null;
 let ctx = null;
 let isDrawing = false;
 let startX, startY;
+let currentImage = null;
 
 // Simple auth check
 function checkAdminAuth() {
   const auth = localStorage.getItem('adminAuth');
   if (!auth) {
     const password = prompt("Enter admin password:");
-    if (password !== "test") { // ← CHANGE THIS
+    if (password !== "test") { // ← CHANGE THIS to a real password
       alert("Access denied");
       window.location.href = "index.html";
       return false;
@@ -43,7 +44,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // Blur modal controls
   document.getElementById('cancel-blur')?.addEventListener('click', closeBlurModal);
   document.getElementById('clear-rects')?.addEventListener('click', clearRects);
-  document.getElementById('apply-blur')?.addEventListener('click', applyBlur);
+  document.getElementById('apply-blur')?.addEventListener('click', applyBlurCurrentPhoto);
+  document.getElementById('save-all-close')?.addEventListener('click', saveAllAndClose);
 });
 
 async function loadAllAlerts() {
@@ -100,8 +102,8 @@ function renderTable() {
       </td>
       <td>
         <button class="approve-btn" data-row="${alert.row}">Approve</button>
-        <button class="reject-btn" data-row="${alert.row}">Reject</button>
-        <button class="blur-btn" data-row="${alert.row}" data-alert='${JSON.stringify(alert)}'>Blur Images</button>
+        <button class="reject-btn"  data-row="${alert.row}">Reject</button>
+        ${alert.photos ? `<button class="blur-btn" data-row="${alert.row}" data-alert='${JSON.stringify(alert)}'>Blur Images</button>` : ''}
       </td>
     `;
     tbody.appendChild(tr);
@@ -120,7 +122,7 @@ function renderTable() {
     btn.addEventListener('click', () => updateStatus(btn.dataset.row, 'rejected'));
   });
 
-  // Blur button – open editor for this alert
+  // Blur button – open editor only if photos exist
   document.querySelectorAll('.blur-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const alertData = JSON.parse(btn.dataset.alert);
@@ -142,7 +144,7 @@ async function updateStatus(row, newStatus) {
     const res = await fetch(`${SCRIPT_URL}?${params}`);
     const data = await res.json();
     if (data.success) {
-      loadAllAlerts();
+      loadAllAlerts(); // refresh
     } else {
       alert("Update failed: " + (data.error || "Unknown"));
     }
@@ -168,47 +170,34 @@ function renderMarkers() {
 }
 
 // ────────────────────────────────────────────────
-// Blur Editor – In-browser canvas drawing
+// Blur Editor – supports multiple photos
 // ────────────────────────────────────────────────
-// Global vars for blur editor
-let currentEditingAlert = null;
-let currentPhotoIndex = 0;
-let photoUrls = [];
-let rects = []; // per-photo rectangles
-let canvas = null;
-let ctx = null;
-let isDrawing = false;
-let startX, startY;
-let currentImage = null;
-
-// Open editor for a specific alert
 function openBlurEditor(alert) {
   currentEditingAlert = alert;
   currentPhotoIndex = 0;
-  rects = []; // reset rectangles
+  rects = [];
 
   const modal = document.getElementById('blur-modal');
-  const canvasEl = document.getElementById('blur-canvas');
-  const indexSpan = document.getElementById('current-photo-index');
-  const totalSpan = document.getElementById('total-photos');
-
-  if (!alert.photos || !alert.photos.trim()) {
-    alert("No photos in this report.");
+  if (!modal) {
+    alert("Blur modal not found in page.");
     return;
   }
 
-  photoUrls = alert.photos.split(',').map(u => u.trim()).filter(Boolean);
-  if (photoUrls.length === 0) return;
+  photoUrls = alert.photos ? alert.photos.split(',').map(u => u.trim()).filter(Boolean) : [];
+  if (photoUrls.length === 0) {
+    alert("No photos to edit in this report.");
+    return;
+  }
 
-  totalSpan.textContent = photoUrls.length;
+  document.getElementById('total-photos').textContent = photoUrls.length;
   updatePhotoDisplay();
 
   modal.style.display = 'flex';
 
-  canvas = canvasEl;
+  canvas = document.getElementById('blur-canvas');
   ctx = canvas.getContext('2d');
 
-  // Mouse drawing events
+  // Mouse events
   canvas.onmousedown = (e) => {
     isDrawing = true;
     startX = e.offsetX;
@@ -235,33 +224,11 @@ function openBlurEditor(alert) {
   };
 
   canvas.onmouseout = () => { isDrawing = false; };
-
-  // Navigation buttons
-  document.getElementById('prev-photo').onclick = () => {
-    if (currentPhotoIndex > 0) {
-      saveCurrentRects(); // optional: save rects per photo if needed later
-      currentPhotoIndex--;
-      updatePhotoDisplay();
-    }
-  };
-
-  document.getElementById('next-photo').onclick = () => {
-    if (currentPhotoIndex < photoUrls.length - 1) {
-      saveCurrentRects();
-      currentPhotoIndex++;
-      updatePhotoDisplay();
-    }
-  };
-
-  document.getElementById('cancel-blur').onclick = closeBlurModal;
-  document.getElementById('clear-rects').onclick = clearRects;
-  document.getElementById('apply-blur').onclick = applyBlurCurrentPhoto;
-  document.getElementById('save-all-close').onclick = saveAllAndClose;
 }
 
 function updatePhotoDisplay() {
   document.getElementById('current-photo-index').textContent = currentPhotoIndex + 1;
-  rects = []; // reset rects for new photo (or load saved if you want persistence)
+  rects = []; // Reset rectangles for each photo
   loadAndDrawImage(photoUrls[currentPhotoIndex]);
 }
 
@@ -334,12 +301,12 @@ async function applyBlurCurrentPhoto() {
         const newUrl = json.data.url;
         alert(`Blurred photo ${currentPhotoIndex + 1} uploaded!\nNew URL: ${newUrl}`);
 
-        // Replace only this photo's URL in the list
+        // Replace this photo's URL
         const urls = currentEditingAlert.photos.split(',').map(u => u.trim());
         urls[currentPhotoIndex] = newUrl;
-        currentEditingAlert.photos = urls.join(','); // update local object
+        currentEditingAlert.photos = urls.join(',');
 
-        // Save to sheet (only this photo updated)
+        // Save to sheet
         const params = new URLSearchParams({
           action: 'update-photos',
           row: currentEditingAlert.row,
@@ -351,7 +318,7 @@ async function applyBlurCurrentPhoto() {
 
         if (updateJson.success) {
           alert("Sheet updated with blurred photo!");
-          loadAllAlerts(); // refresh everything
+          loadAllAlerts();
         } else {
           alert("Sheet update failed: " + (updateJson.error || "Unknown"));
         }
@@ -365,10 +332,8 @@ async function applyBlurCurrentPhoto() {
   }, 'image/jpeg', 0.92);
 }
 
-// Optional: Save all changes and close (if you want batch save)
 async function saveAllAndClose() {
-  // For now just close – can extend to batch upload if needed
-  if (confirm("Save all changes and close?")) {
+  if (confirm("Save all changes and close? (Current photo already saved)")) {
     closeBlurModal();
     loadAllAlerts();
   }
