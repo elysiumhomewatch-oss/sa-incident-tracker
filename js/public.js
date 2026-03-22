@@ -19,23 +19,34 @@ if (form) {
     e.preventDefault();
     console.log("Form submit event triggered");
 
+    // Show previews of selected photos (mobile-friendly)
+    const previewDiv = document.getElementById('photo-preview');
+    previewDiv.innerHTML = '';
+
     let photoUrls = [];
 
-    // Try to upload up to 3 photos
     for (let i = 1; i <= 3; i++) {
       const fileInput = document.getElementById(`photo${i}`);
-      console.log(`Checking photo${i} input:`, fileInput);
-
       if (fileInput && fileInput.files && fileInput.files.length > 0) {
         const file = fileInput.files[0];
         console.log(`Photo ${i} selected:`, file.name, file.size, file.type);
+
+        // Show preview thumbnail
+        const img = document.createElement('img');
+        img.src = URL.createObjectURL(file);
+        img.style.width = '80px';
+        img.style.height = '80px';
+        img.style.objectFit = 'cover';
+        img.style.borderRadius = '6px';
+        img.style.border = '2px solid #006633';
+        previewDiv.appendChild(img);
 
         const uploadFormData = new FormData();
         uploadFormData.append("image", file);
         uploadFormData.append("key", "ccb5d3992f0066955a63d303a75c32a0");
 
         try {
-          console.log(`Sending upload request for photo ${i}...`);
+          console.log(`Uploading photo ${i}...`);
           const uploadResponse = await fetch("https://api.imgbb.com/1/upload", {
             method: "POST",
             body: uploadFormData
@@ -48,15 +59,15 @@ if (form) {
 
           if (uploadResult.success && uploadResult.data && uploadResult.data.url) {
             photoUrls.push(uploadResult.data.url);
-            console.log(`Photo ${i} SUCCESS – URL:`, uploadResult.data.url);
+            console.log(`Photo ${i} success: ${uploadResult.data.url}`);
           } else {
-            console.error(`Photo ${i} FAILED:`, uploadResult.error || "No success field");
+            console.error(`Photo ${i} failed:`, uploadResult.error || "No success");
+            alert(`Photo ${i} upload failed – continuing without it.`);
           }
         } catch (uploadErr) {
-          console.error(`Photo ${i} NETWORK/EXCEPTION ERROR:`, uploadErr.message);
+          console.error(`Photo ${i} error:`, uploadErr);
+          alert(`Could not upload photo ${i} – continuing without it.`);
         }
-      } else {
-        console.log(`No file selected for photo${i}`);
       }
     }
 
@@ -70,7 +81,6 @@ if (form) {
       params.append(key, value.trim());
     }
 
-    // Add photos
     photoUrls.forEach((url, idx) => {
       params.append(`photo${idx + 1}`, url);
     });
@@ -80,7 +90,6 @@ if (form) {
     console.log("FINAL PARAMS BEFORE SEND:", params.toString());
 
     try {
-      console.log("Sending to Apps Script...");
       const response = await fetch(`${SCRIPT_URL}?${params.toString()}`);
       console.log("Fetch response status:", response.status);
 
@@ -92,6 +101,7 @@ if (form) {
         messageDiv.style.color = "#28a745";
         messageDiv.style.display = "block";
         form.reset();
+        previewDiv.innerHTML = ''; // clear previews
         for (let i = 1; i <= 3; i++) {
           const input = document.getElementById(`photo${i}`);
           if (input) input.value = "";
@@ -102,8 +112,8 @@ if (form) {
         messageDiv.style.display = "block";
       }
     } catch (err) {
-      console.error("Main fetch error:", err);
-      messageDiv.textContent = "Network error — check console.";
+      console.error("Submit network error:", err);
+      messageDiv.textContent = "Network error — please try again later.";
       messageDiv.style.color = "#dc3545";
       messageDiv.style.display = "block";
     }
