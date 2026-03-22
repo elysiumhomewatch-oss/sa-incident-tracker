@@ -71,7 +71,7 @@ async function loadAllAlerts() {
 
 function renderTable() {
   const tbody = document.getElementById('alert-table-body');
-  if (!tbody) return; // safety
+  if (!tbody) return;
 
   tbody.innerHTML = '';
 
@@ -100,13 +100,14 @@ function renderTable() {
 
       <td>
         <select class="status-select" data-row="${alert.row}">
-          <option value="pending"    ${alert.status==='pending'?'selected':''}>Pending</option>
-          <option value="approved"   ${alert.status==='approved'?'selected':''}>Approved</option>
-          <option value="rejected"   ${alert.status==='rejected'?'selected':''}>Rejected</option>
-          <option value="in-progress" ${alert.status==='in-progress'?'selected':''}>In Progress"</option>
-          <option value="resolved"   ${alert.status==='resolved'?'selected':''}>Resolved</option>
+          <option value="pending"    ${alert.status === 'pending'    ? 'selected' : ''}>Pending</option>
+          <option value="approved"   ${alert.status === 'approved'   ? 'selected' : ''}>Approved</option>
+          <option value="rejected"   ${alert.status === 'rejected'   ? 'selected' : ''}>Rejected</option>
+          <option value="in-progress" ${alert.status === 'in-progress' ? 'selected' : ''}>In Progress</option>
+          <option value="resolved"   ${alert.status === 'resolved'   ? 'selected' : ''}>Resolved</option>
         </select>
       </td>
+
       <td>
         <button class="approve-btn" data-row="${alert.row}">Approve</button>
         <button class="reject-btn"  data-row="${alert.row}">Reject</button>
@@ -177,7 +178,7 @@ function renderMarkers() {
 }
 
 // ────────────────────────────────────────────────
-// Blur Editor – supports multiple photos with navigation
+// Blur Editor – supports multiple photos
 // ────────────────────────────────────────────────
 function openBlurEditor(alert) {
   currentEditingAlert = alert;
@@ -274,7 +275,7 @@ function updatePhotoDisplay() {
   const indexEl = document.getElementById('current-photo-index');
   if (indexEl) indexEl.textContent = currentPhotoIndex + 1;
 
-  rects = []; // reset rects for new photo
+  rects = []; // reset per photo
   loadAndDrawImage(photoUrls[currentPhotoIndex]);
   updateNavButtons();
 }
