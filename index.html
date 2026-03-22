@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <link rel="icon" href="data:;base64,iVBORw0KGgo=">
   <title>ZA Incident Tracker • Public</title>
+
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
@@ -12,7 +13,13 @@
   <link rel="stylesheet" href="css/style.css">
 
   <style>
-    #map { height: 55vh; min-height: 300px; max-height: 620px; margin: 20px auto; width: 100%; }
+    #map { 
+      height: 55vh; 
+      min-height: 300px; 
+      max-height: 620px; 
+      margin: 20px auto; 
+      width: 100%; 
+    }
     @media (max-width: 600px) {
       body { padding: 12px; }
       form { padding: 15px; }
@@ -23,6 +30,7 @@
       }
       .submit-btn { width: 100%; }
       #submit-message { font-size: 1.1em; }
+      label { font-size: 1.05em; }
     }
   </style>
 </head>
@@ -71,166 +79,51 @@
           </div>
         </div>
 
-        <!-- Old photo inputs -->
-if (form) {
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    console.log("Form submit triggered");
+        <!-- Mobile-optimized photo upload -->
+        <div style="margin:25px 0;">
+          <label style="display:block; font-weight:600; margin-bottom:12px;">Attach Photos (up to 3 – optional)</label>
 
-    const previewDiv = document.getElementById('photo-preview');
-    previewDiv.innerHTML = '';
+          <div style="display:flex; flex-direction:column; gap:14px;">
+            <!-- Photo 1 -->
+            <div>
+              <button type="button" onclick="document.getElementById('photo1').click()" 
+                      style="width:100%; padding:16px; background:#006633; color:white; border:none; border-radius:8px; font-size:1.1em; min-height:54px; box-shadow:0 2px 8px rgba(0,0,0,0.2);">
+                📸 Photo 1 – Take or Choose
+              </button>
+              <input type="file" id="photo1" accept="image/*" capture="environment" style="display:none;">
+            </div>
 
-    let photoUrls = [];
-    let photoBlobs = []; // resized blobs ready to upload
+            <!-- Photo 2 -->
+            <div>
+              <button type="button" onclick="document.getElementById('photo2').click()" 
+                      style="width:100%; padding:16px; background:#006633; color:white; border:none; border-radius:8px; font-size:1.1em; min-height:54px; box-shadow:0 2px 8px rgba(0,0,0,0.2);">
+                📸 Photo 2 – Take or Choose
+              </button>
+              <input type="file" id="photo2" accept="image/*" capture="environment" style="display:none;">
+            </div>
 
-    // Collect from both inputs (camera and gallery)
-    const inputs = [document.getElementById('photo-input-1'), document.getElementById('photo-input-2')];
-    let photoCount = 0;
+            <!-- Photo 3 -->
+            <div>
+              <button type="button" onclick="document.getElementById('photo3').click()" 
+                      style="width:100%; padding:16px; background:#006633; color:white; border:none; border-radius:8px; font-size:1.1em; min-height:54px; box-shadow:0 2px 8px rgba(0,0,0,0.2);">
+                📸 Photo 3 – Take or Choose
+              </button>
+              <input type="file" id="photo3" accept="image/*" capture="environment" style="display:none;">
+            </div>
+          </div>
 
-    for (let input of inputs) {
-      if (input && input.files && input.files.length > 0) {
-        const file = input.files[0];
-        console.log(`Photo selected: ${file.name}, size: ${(file.size / 1024).toFixed(1)} KB`);
+          <!-- Preview area -->
+          <div id="photo-preview" style="display:flex; flex-wrap:wrap; gap:12px; margin-top:15px;"></div>
+        </div>
 
-        // Resize & compress
-        const resizedBlob = await resizeAndCompressImage(file, 800, 0.7); // max 800px width, 70% quality
-        if (resizedBlob) {
-          photoBlobs.push(resizedBlob);
-          photoCount++;
-
-          // Show preview
-          const img = document.createElement('img');
-          img.src = URL.createObjectURL(resizedBlob);
-          img.style.width = '80px';
-          img.style.height = '80px';
-          img.style.objectFit = 'cover';
-          img.style.borderRadius = '6px';
-          img.style.border = '2px solid #006633';
-          previewDiv.appendChild(img);
-        }
-      }
-    }
-
-    if (photoCount > 3) {
-      alert("Maximum 3 photos allowed. Only the first 3 will be used.");
-      photoBlobs = photoBlobs.slice(0, 3);
-    }
-
-    console.log(`Prepared ${photoBlobs.length} resized photos for upload`);
-
-    // Upload resized blobs
-    for (let i = 0; i < photoBlobs.length; i++) {
-      const blob = photoBlobs[i];
-      const uploadFormData = new FormData();
-      uploadFormData.append("image", blob, `photo-${i+1}.jpg`);
-      uploadFormData.append("key", "ccb5d3992f0066955a63d303a75c32a0");
-
-      try {
-        console.log(`Uploading photo ${i+1}...`);
-        const res = await fetch("https://api.imgbb.com/1/upload", {
-          method: "POST",
-          body: uploadFormData
-        });
-
-        const json = await res.json();
-        console.log(`ImgBB response for photo ${i+1}:`, json);
-
-        if (json.success && json.data?.url) {
-          photoUrls.push(json.data.url);
-          console.log(`Photo ${i+1} uploaded: ${json.data.url}`);
-        } else {
-          console.error(`Photo ${i+1} upload failed:`, json.error);
-          alert(`Photo ${i+1} upload failed – continuing without it.`);
-        }
-      } catch (err) {
-        console.error(`Photo ${i+1} error:`, err);
-        alert(`Could not upload photo ${i+1} – continuing without it.`);
-      }
-    }
-
-    // Build params
-    const formData = new FormData(form);
-    const params = new URLSearchParams();
-
-    for (const [key, value] of formData.entries()) {
-      params.append(key, value.trim());
-    }
-
-    photoUrls.forEach((url, idx) => {
-      params.append(`photo${idx + 1}`, url);
-    });
-
-    params.append('action', 'submit-alert');
-
-    console.log("FINAL PARAMS:", params.toString());
-
-    try {
-      const response = await fetch(`${SCRIPT_URL}?${params.toString()}`);
-      const result = await response.json();
-
-      if (result.success) {
-        messageDiv.textContent = "Report submitted successfully — awaiting moderation.";
-        messageDiv.style.color = "#28a745";
-        messageDiv.style.display = "block";
-        form.reset();
-        previewDiv.innerHTML = '';
-      } else {
-        messageDiv.textContent = "Submission failed: " + (result.error || "Unknown");
-        messageDiv.style.color = "#dc3545";
-        messageDiv.style.display = "block";
-      }
-    } catch (err) {
-      console.error("Submit error:", err);
-      messageDiv.textContent = "Network error — please try again later.";
-      messageDiv.style.color = "#dc3545";
-      messageDiv.style.display = "block";
-    }
-
-    setTimeout(() => { messageDiv.style.display = "none"; }, 8000);
-  });
-}
-
-// Resize and compress image client-side
-async function resizeAndCompressImage(file, maxWidth = 800, quality = 0.7) {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.onload = () => {
-      let width = img.width;
-      let height = img.height;
-
-      if (width > maxWidth) {
-        height = Math.round((height * maxWidth) / width);
-        width = maxWidth;
-      }
-
-      const canvas = document.createElement('canvas');
-      canvas.width = width;
-      canvas.height = height;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0, width, height);
-
-      canvas.toBlob(
-        (blob) => resolve(blob),
-        'image/jpeg',
-        quality
-      );
-    };
-    img.onerror = reject;
-    img.src = URL.createObjectURL(file);
-  });
-}
-
-        <!-- Photo previews -->
-        <div id="photo-preview" style="margin-top:10px; display:flex; flex-wrap:wrap; gap:10px;"></div>
-
-        <div style="text-align:center; margin-top:25px;">
-          <button type="submit" class="submit-btn" style="background:#006633; color:white; padding:14px 36px; font-size:1.15em; border:none; border-radius:8px; cursor:pointer;">
+        <div style="text-align:center; margin-top:30px;">
+          <button type="submit" class="submit-btn" style="background:#006633; color:white; padding:16px 40px; font-size:1.2em; border:none; border-radius:8px; cursor:pointer; min-height:56px; box-shadow:0 4px 12px rgba(0,102,51,0.4);">
             Submit Report for Review
           </button>
         </div>
       </form>
 
-      <div id="submit-message" style="margin-top:15px; text-align:center; font-weight:bold; color:#28a745; display:none;">
+      <div id="submit-message" style="margin-top:20px; text-align:center; font-weight:bold; color:#28a745; display:none; font-size:1.1em;">
         Report submitted successfully — awaiting moderation.
       </div>
     </div>
