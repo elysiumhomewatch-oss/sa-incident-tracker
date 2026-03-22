@@ -383,7 +383,7 @@ async function saveAllAndClose() {
     closeBlurModal();
     loadAllAlerts();
   }
-}
+
 
 function closeBlurModal() {
   document.getElementById('blur-modal').style.display = 'none';
