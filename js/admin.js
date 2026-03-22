@@ -178,7 +178,7 @@ function renderMarkers() {
 }
 
 // ────────────────────────────────────────────────
-// Blur Editor – supports multiple photos
+// Blur Editor – supports multiple photos with navigation
 // ────────────────────────────────────────────────
 function openBlurEditor(alert) {
   currentEditingAlert = alert;
