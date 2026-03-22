@@ -18,7 +18,8 @@ document.addEventListener('DOMContentLoaded', () => {
       e.preventDefault();
       console.log("Form submit triggered");
 
-      previewDiv.innerHTML = '';
+      if (previewDiv) previewDiv.innerHTML = '';
+
       let photoUrls = [];
       let photoBlobs = [];
 
@@ -29,7 +30,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const cameraInput = document.getElementById(`photo${slot}-camera`);
         const galleryInput = document.getElementById(`photo${slot}-gallery`);
 
-        // Prioritize camera if selected, fallback to gallery
         let file = null;
         if (cameraInput?.files?.length > 0) {
           file = cameraInput.files[0];
@@ -44,15 +44,16 @@ document.addEventListener('DOMContentLoaded', () => {
           if (resizedBlob) {
             photoBlobs.push(resizedBlob);
 
-            // Show preview
-            const img = document.createElement('img');
-            img.src = URL.createObjectURL(resizedBlob);
-            img.style.width = '80px';
-            img.style.height = '80px';
-            img.style.objectFit = 'cover';
-            img.style.borderRadius = '6px';
-            img.style.border = '2px solid #006633';
-            previewDiv.appendChild(img);
+            if (previewDiv) {
+              const img = document.createElement('img');
+              img.src = URL.createObjectURL(resizedBlob);
+              img.style.width = '80px';
+              img.style.height = '80px';
+              img.style.objectFit = 'cover';
+              img.style.borderRadius = '6px';
+              img.style.border = '2px solid #006633';
+              previewDiv.appendChild(img);
+            }
           }
         }
       }
@@ -119,12 +120,14 @@ document.addEventListener('DOMContentLoaded', () => {
           messageDiv.style.color = "#28a745";
           messageDiv.style.display = "block";
           form.reset();
-          previewDiv.innerHTML = '';
+          if (previewDiv) previewDiv.innerHTML = '';
 
           // Clear all hidden inputs
           for (let slot = 1; slot <= 3; slot++) {
-            document.getElementById(`photo${slot}-camera`).value = '';
-            document.getElementById(`photo${slot}-gallery`).value = '';
+            const cam = document.getElementById(`photo${slot}-camera`);
+            const gal = document.getElementById(`photo${slot}-gallery`);
+            if (cam) cam.value = '';
+            if (gal) gal.value = '';
           }
         } else {
           messageDiv.textContent = "Submission failed: " + (result.error || "Unknown");
@@ -138,11 +141,13 @@ document.addEventListener('DOMContentLoaded', () => {
         messageDiv.style.display = "block";
       }
 
-      setTimeout(() => { messageDiv.style.display = "none"; }, 8000);
+      setTimeout(() => {
+        messageDiv.style.display = "none";
+      }, 8000);
     });
   }
 
-  // Resize and compress image client-side
+  // Resize and compress image client-side (only one definition)
   async function resizeAndCompressImage(file, maxWidth = 800, quality = 0.7) {
     return new Promise((resolve, reject) => {
       const img = new Image();
@@ -172,11 +177,12 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Optional: Clear previews and inputs on form reset (if needed)
+  // Optional: Clear previews and inputs on form reset
   form.addEventListener('reset', () => {
-    document.getElementById('photo-preview').innerHTML = '';
+    const preview = document.getElementById('photo-preview');
+    if (preview) preview.innerHTML = '';
   });
-}
+});
 
 // ────────────────────────────────────────────────
 // Modal handler for "Add report here?"
