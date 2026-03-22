@@ -43,7 +43,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // Blur modal controls
   document.getElementById('cancel-blur')?.addEventListener('click', closeBlurModal);
   document.getElementById('clear-rects')?.addEventListener('click', clearRects);
-  document.getElementById('apply-blur')?.addEventListener('click', applyBlur);
+  document.getElementById('apply-blur')?.addEventListener('click', applyBlurToCurrent);
+  document.getElementById('done-blur')?.addEventListener('click', doneBlurAll);
   document.getElementById('prev-photo')?.addEventListener('click', () => navigatePhoto(-1));
   document.getElementById('next-photo')?.addEventListener('click', () => navigatePhoto(1));
 });
@@ -170,7 +171,7 @@ function renderMarkers() {
 }
 
 // ────────────────────────────────────────────────
-// Blur Editor Modal Logic
+// Blur Editor Modal – now supports multiple photos
 // ────────────────────────────────────────────────
 function openBlurEditor(alert) {
   currentEditingAlert = alert;
@@ -247,7 +248,7 @@ function loadAndDrawCurrentPhoto() {
     canvas.width = currentImage.width;
     canvas.height = currentImage.height;
     ctx.drawImage(currentImage, 0, 0);
-    rects = []; // reset rectangles for new photo
+    rects = []; // reset rectangles for each photo
     redraw();
   };
   currentImage.onerror = () => {
@@ -289,7 +290,7 @@ function navigatePhoto(direction) {
   loadAndDrawCurrentPhoto();
 }
 
-async function applyBlur() {
+async function applyBlurToCurrent() {
   if (rects.length === 0) {
     alert("No areas selected to blur on this photo.");
     return;
@@ -317,34 +318,48 @@ async function applyBlur() {
         const newUrl = json.data.url;
         alert("Blurred photo uploaded!\nNew URL: " + newUrl);
 
-        // Replace this photo's URL in the list
+        // Replace only this photo's URL
         currentPhotoUrls[currentPhotoIndex] = newUrl;
-        const updatedPhotos = currentPhotoUrls.join(',');
-
-        const params = new URLSearchParams({
-          action: 'update-photos',
-          row: currentEditingAlert.row,
-          photos: updatedPhotos
-        });
-
-        const updateRes = await fetch(`${SCRIPT_URL}?${params.toString()}`);
-        const updateJson = await updateRes.json();
-
-        if (updateJson.success) {
-          alert("Sheet updated with blurred photo!");
-          loadAllAlerts();
-          closeBlurModal();
-        } else {
-          alert("Sheet update failed: " + (updateJson.error || "Unknown"));
-        }
+        alert("This photo blurred and ready. Continue with next or click Done to save all changes.");
       } else {
         alert("Upload failed: " + (json.error?.message || "Unknown"));
       }
     } catch (err) {
-      console.error("Blur save error:", err);
-      alert("Failed to save blurred photo – check console.");
+      console.error("Blur upload error:", err);
+      alert("Failed to upload blurred photo – check console.");
     }
   }, 'image/jpeg', 0.9);
+}
+
+async function doneBlurAll() {
+  if (currentPhotoUrls.length === 0) {
+    closeBlurModal();
+    return;
+  }
+
+  const updatedPhotos = currentPhotoUrls.join(',');
+
+  try {
+    const params = new URLSearchParams({
+      action: 'update-photos',
+      row: currentEditingAlert.row,
+      photos: updatedPhotos
+    });
+
+    const res = await fetch(`${SCRIPT_URL}?${params.toString()}`);
+    const json = await res.json();
+
+    if (json.success) {
+      alert("All changes saved to sheet!");
+      loadAllAlerts();
+      closeBlurModal();
+    } else {
+      alert("Sheet update failed: " + (json.error || "Unknown"));
+    }
+  } catch (err) {
+    console.error("Final save error:", err);
+    alert("Failed to save changes – check console.");
+  }
 }
 
 function closeBlurModal() {
