@@ -369,3 +369,118 @@ function closeBlurModal() {
   currentPhotoUrls = [];
   currentPhotoIndex = 0;
 }
+
+// ────────────────────────────────────────────────
+// Live Cameras Section – horizontal scroll + add/remove
+// ────────────────────────────────────────────────
+
+document.addEventListener('DOMContentLoaded', () => {
+  // Load saved cameras from sheet when page loads
+  loadSavedCameras();
+
+  // Handle add camera form
+  document.getElementById('add-camera-form')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const name = formData.get('name').trim();
+    const url = formData.get('url').trim();
+
+    if (!name || !url) {
+      alert("Please fill both name and URL.");
+      return;
+    }
+
+    const params = new URLSearchParams({
+      action: 'add-camera',
+      name: name,
+      url: url
+    });
+
+    try {
+      const res = await fetch(`${SCRIPT_URL}?${params}`);
+      const result = await res.json();
+      if (result.success) {
+        alert("Camera added!");
+        e.target.reset();
+        loadSavedCameras(); // refresh list
+      } else {
+        alert("Failed: " + (result.error || "Unknown"));
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Network error – try again.");
+    }
+  });
+});
+
+// Load and display saved cameras
+async function loadSavedCameras() {
+  try {
+    const res = await fetch(`${SCRIPT_URL}?action=get-cameras`);
+    const data = await res.json();
+
+    if (!data.success) {
+      console.error("Failed to load cameras:", data.error);
+      return;
+    }
+
+    const container = document.getElementById('camera-scroll-container');
+    container.innerHTML = ''; // clear existing
+
+    if (data.cameras.length === 0) {
+      container.innerHTML = '<p style="color:#777; text-align:center; width:100%;">No cameras added yet.</p>';
+      return;
+    }
+
+    data.cameras.forEach(cam => {
+      const div = document.createElement('div');
+      div.style.cssText = 'flex:0 0 320px; text-align:center; background:#fff; padding:10px; border-radius:8px; border:1px solid #ddd; box-shadow:0 2px 8px rgba(0,0,0,0.1);';
+      div.innerHTML = `
+        <h4 style="margin:0 0 8px 0; font-size:1.1em;">${cam.name}</h4>
+        <img id="cam-${cam.id}" 
+             src="${cam.url}" 
+             style="width:100%; border:3px solid #006633; border-radius:8px;" 
+             alt="Live cam ${cam.name}">
+        <button onclick="removeCamera('${cam.id}')" 
+                style="margin-top:10px; background:#dc3545; color:white; padding:6px 12px; border:none; border-radius:4px; cursor:pointer;">
+          Remove
+        </button>
+      `;
+      container.appendChild(div);
+
+      // Auto-refresh this image every 60 seconds
+      setInterval(() => {
+        const img = document.getElementById(`cam-${cam.id}`);
+        if (img) {
+          img.src = img.src.split('?')[0] + '?' + new Date().getTime();
+        }
+      }, 60000);
+    });
+  } catch (err) {
+    console.error("Load cameras error:", err);
+  }
+}
+
+// Remove camera by ID
+async function removeCamera(id) {
+  if (!confirm("Remove this camera?")) return;
+
+  const params = new URLSearchParams({
+    action: 'remove-camera',
+    id: id
+  });
+
+  try {
+    const res = await fetch(`${SCRIPT_URL}?${params}`);
+    const result = await res.json();
+    if (result.success) {
+      alert("Camera removed.");
+      loadSavedCameras();
+    } else {
+      alert("Failed: " + (result.error || "Unknown"));
+    }
+  } catch (err) {
+    console.error(err);
+    alert("Network error.");
+  }
+}
