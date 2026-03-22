@@ -168,33 +168,47 @@ function renderMarkers() {
 }
 
 // ────────────────────────────────────────────────
-// Blur Editor – Option 2: In-browser canvas drawing
+// Blur Editor – In-browser canvas drawing
 // ────────────────────────────────────────────────
+// Global vars for blur editor
+let currentEditingAlert = null;
+let currentPhotoIndex = 0;
+let photoUrls = [];
+let rects = []; // per-photo rectangles
+let canvas = null;
+let ctx = null;
+let isDrawing = false;
+let startX, startY;
+let currentImage = null;
+
+// Open editor for a specific alert
 function openBlurEditor(alert) {
   currentEditingAlert = alert;
   currentPhotoIndex = 0;
-  rects = [];
+  rects = []; // reset rectangles
 
   const modal = document.getElementById('blur-modal');
   const canvasEl = document.getElementById('blur-canvas');
-  document.getElementById('current-photo-index').textContent = `1 of ${alert.photos ? alert.photos.split(',').length : 0}`;
+  const indexSpan = document.getElementById('current-photo-index');
+  const totalSpan = document.getElementById('total-photos');
 
   if (!alert.photos || !alert.photos.trim()) {
     alert("No photos in this report.");
     return;
   }
 
-  const urls = alert.photos.split(',').map(u => u.trim()).filter(Boolean);
-  if (urls.length === 0) return;
+  photoUrls = alert.photos.split(',').map(u => u.trim()).filter(Boolean);
+  if (photoUrls.length === 0) return;
+
+  totalSpan.textContent = photoUrls.length;
+  updatePhotoDisplay();
+
+  modal.style.display = 'flex';
 
   canvas = canvasEl;
   ctx = canvas.getContext('2d');
 
-  loadAndDrawImage(urls[currentPhotoIndex]);
-
-  modal.style.display = 'flex';
-
-  // Mouse events for drawing rectangles
+  // Mouse drawing events
   canvas.onmousedown = (e) => {
     isDrawing = true;
     startX = e.offsetX;
@@ -211,11 +225,44 @@ function openBlurEditor(alert) {
     isDrawing = false;
     const endX = e.offsetX;
     const endY = e.offsetY;
-    rects.push({x: Math.min(startX, endX), y: Math.min(startY, endY), w: Math.abs(endX - startX), h: Math.abs(endY - startY)});
+    rects.push({
+      x: Math.min(startX, endX),
+      y: Math.min(startY, endY),
+      w: Math.abs(endX - startX),
+      h: Math.abs(endY - startY)
+    });
     redraw();
   };
 
   canvas.onmouseout = () => { isDrawing = false; };
+
+  // Navigation buttons
+  document.getElementById('prev-photo').onclick = () => {
+    if (currentPhotoIndex > 0) {
+      saveCurrentRects(); // optional: save rects per photo if needed later
+      currentPhotoIndex--;
+      updatePhotoDisplay();
+    }
+  };
+
+  document.getElementById('next-photo').onclick = () => {
+    if (currentPhotoIndex < photoUrls.length - 1) {
+      saveCurrentRects();
+      currentPhotoIndex++;
+      updatePhotoDisplay();
+    }
+  };
+
+  document.getElementById('cancel-blur').onclick = closeBlurModal;
+  document.getElementById('clear-rects').onclick = clearRects;
+  document.getElementById('apply-blur').onclick = applyBlurCurrentPhoto;
+  document.getElementById('save-all-close').onclick = saveAllAndClose;
+}
+
+function updatePhotoDisplay() {
+  document.getElementById('current-photo-index').textContent = currentPhotoIndex + 1;
+  rects = []; // reset rects for new photo (or load saved if you want persistence)
+  loadAndDrawImage(photoUrls[currentPhotoIndex]);
 }
 
 function loadAndDrawImage(url) {
@@ -238,6 +285,7 @@ function loadAndDrawImage(url) {
 }
 
 function redraw() {
+  if (!currentImage) return;
   ctx.drawImage(currentImage, 0, 0);
   ctx.strokeStyle = "red";
   ctx.lineWidth = 3;
@@ -258,18 +306,16 @@ function clearRects() {
   redraw();
 }
 
-async function applyBlur() {
+async function applyBlurCurrentPhoto() {
   if (rects.length === 0) {
-    alert("No areas selected to blur.");
+    alert("No areas selected to blur on this photo.");
     return;
   }
 
-  // Apply blur to selected rectangles
   rects.forEach(r => {
-    StackBlur.canvasRGBA(canvas, r.x, r.y, r.w, r.h, 20); // blur radius 20
+    StackBlur.canvasRGBA(canvas, r.x, r.y, r.w, r.h, 20);
   });
 
-  // Convert canvas to blob
   canvas.toBlob(async (blob) => {
     if (!blob) {
       alert("Failed to generate blurred image.");
@@ -277,56 +323,55 @@ async function applyBlur() {
     }
 
     const formData = new FormData();
-    formData.append("image", blob, "blurred-photo.jpg");
-    formData.append("key", "ccb5d3992f0066955a63d303a75c32a0"); // your ImgBB key
+    formData.append("image", blob, `blurred-photo-${currentPhotoIndex + 1}.jpg`);
+    formData.append("key", "ccb5d3992f0066955a63d303a75c32a0");
 
     try {
-      console.log("Uploading blurred image to ImgBB...");
-      const uploadRes = await fetch("https://api.imgbb.com/1/upload", {
-        method: "POST",
-        body: formData
-      });
+      const res = await fetch("https://api.imgbb.com/1/upload", { method: "POST", body: formData });
+      const json = await res.json();
 
-      const uploadJson = await uploadRes.json();
-      console.log("ImgBB upload result:", uploadJson);
+      if (json.success) {
+        const newUrl = json.data.url;
+        alert(`Blurred photo ${currentPhotoIndex + 1} uploaded!\nNew URL: ${newUrl}`);
 
-      if (!uploadJson.success || !uploadJson.data?.url) {
-        throw new Error(uploadJson.error?.message || "Upload failed");
-      }
+        // Replace only this photo's URL in the list
+        const urls = currentEditingAlert.photos.split(',').map(u => u.trim());
+        urls[currentPhotoIndex] = newUrl;
+        currentEditingAlert.photos = urls.join(','); // update local object
 
-      const newUrl = uploadJson.data.url;
-      alert("Blurred photo uploaded!\nNew URL: " + newUrl);
+        // Save to sheet (only this photo updated)
+        const params = new URLSearchParams({
+          action: 'update-photos',
+          row: currentEditingAlert.row,
+          photos: currentEditingAlert.photos
+        });
 
-      // Prepare update to sheet
-      const urls = currentEditingAlert.photos.split(',').map(u => u.trim()).filter(Boolean);
-      urls[currentPhotoIndex] = newUrl;
-      const updatedPhotos = urls.join(',');
+        const updateRes = await fetch(`${SCRIPT_URL}?${params}`);
+        const updateJson = await updateRes.json();
 
-      console.log("Sending update to sheet:", { row: currentEditingAlert.row, photos: updatedPhotos });
-
-      const updateParams = new URLSearchParams({
-        action: 'update-photos',
-        row: currentEditingAlert.row,
-        photos: updatedPhotos
-      });
-
-      const updateRes = await fetch(`${SCRIPT_URL}?${updateParams.toString()}`);
-      const updateJson = await updateRes.json();
-
-      console.log("Sheet update response:", updateJson);
-
-      if (updateJson.success) {
-        alert("Sheet updated with blurred photo!");
-        loadAllAlerts(); // refresh table & map
-        closeBlurModal();
+        if (updateJson.success) {
+          alert("Sheet updated with blurred photo!");
+          loadAllAlerts(); // refresh everything
+        } else {
+          alert("Sheet update failed: " + (updateJson.error || "Unknown"));
+        }
       } else {
-        alert("Sheet update failed: " + (updateJson.error || "Unknown error"));
+        alert("Upload failed: " + (json.error?.message || "Unknown"));
       }
     } catch (err) {
       console.error("Blur save error:", err);
       alert("Failed to save blurred photo – check console.");
     }
-  }, 'image/jpeg', 0.92); // high quality JPEG
+  }, 'image/jpeg', 0.92);
+}
+
+// Optional: Save all changes and close (if you want batch save)
+async function saveAllAndClose() {
+  // For now just close – can extend to batch upload if needed
+  if (confirm("Save all changes and close?")) {
+    closeBlurModal();
+    loadAllAlerts();
+  }
 }
 
 function closeBlurModal() {
