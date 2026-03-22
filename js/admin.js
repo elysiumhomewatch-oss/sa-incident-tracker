@@ -76,8 +76,17 @@ function renderTable() {
   tbody.innerHTML = '';
 
   allAlerts.forEach(alert => {
+    const status = alert.status || '';
+
+    // Compute selected attributes safely outside the string
+    const isPending    = status === 'pending'    ? 'selected' : '';
+    const isApproved   = status === 'approved'   ? 'selected' : '';
+    const isRejected   = status === 'rejected'   ? 'selected' : '';
+    const isInProgress = status === 'in-progress' ? 'selected' : '';
+    const isResolved   = status === 'resolved'   ? 'selected' : '';
+
     const tr = document.createElement('tr');
-    tr.className = alert.status?.toLowerCase() || '';
+    tr.className = status.toLowerCase() || '';
     tr.innerHTML = `
       <td>${alert.timestamp || '—'}</td>
       <td>${alert.type || 'other'}</td>
@@ -100,10 +109,11 @@ function renderTable() {
 
       <td>
         <select class="status-select" data-row="${alert.row}">
-          <option value="pending"    ${alert.status === 'pending'    ? 'selected' : ''}>Pending</option>
-          <option value="approved"   ${alert.status === 'approved'   ? 'selected' : ''}>Approved</option>
-          <option value="rejected"   ${alert.status === 'rejected'   ? 'selected' : ''}>Rejected</option>
-          <option value="resolved"   ${alert.status === 'resolved'   ? 'selected' : ''}>Resolved</option>
+          <option value="pending"    ${isPending}>Pending</option>
+          <option value="approved"   ${isApproved}>Approved</option>
+          <option value="rejected"   ${isRejected}>Rejected</option>
+          <option value="in-progress" ${isInProgress}>In Progress</option>
+          <option value="resolved"   ${isResolved}>Resolved</option>
         </select>
       </td>
 
