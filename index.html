@@ -61,12 +61,27 @@
           </div>
         </div>
 
-        <div style="margin:15px 0;">
-          <label>Attach Photos (up to 3 – optional)</label>
-          <input type="file" id="photo1" accept="image/*"><br><br>
-          <input type="file" id="photo2" accept="image/*"><br><br>
-          <input type="file" id="photo3" accept="image/*"> <!-- fixed: removed trailing space in id -->
-        </div>
+        <div style="margin:20px 0;">
+  <label style="display:block; font-weight:600; margin-bottom:10px;">Attach Photos (up to 3 – optional)</label>
+
+  <div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:15px;">
+    <button type="button" onclick="document.getElementById('photo-input-1').click()" 
+            style="flex:1; padding:12px; background:#006633; color:white; border:none; border-radius:6px; cursor:pointer; min-height:48px;">
+      📸 Take Photo
+    </button>
+    <button type="button" onclick="document.getElementById('photo-input-2').click()" 
+            style="flex:1; padding:12px; background:#F15A24; color:white; border:none; border-radius:6px; cursor:pointer; min-height:48px;">
+      🖼️ Choose from Gallery
+    </button>
+  </div>
+
+  <!-- Hidden real inputs -->
+  <input type="file" id="photo-input-1" accept="image/*" capture="environment" style="display:none;">
+  <input type="file" id="photo-input-2" accept="image/*" style="display:none;"> <!-- gallery only -->
+
+  <!-- Preview area -->
+  <div id="photo-preview" style="display:flex; flex-wrap:wrap; gap:12px; margin-top:10px;"></div>
+</div>
 
         <div style="text-align: center; margin-top: 25px;">
           <button type="submit" class="submit-btn" style="background:#007bff; color:white; padding:12px 30px; font-size:1.1em; border:none; border-radius:6px; cursor:pointer;">
