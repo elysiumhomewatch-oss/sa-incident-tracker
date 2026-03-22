@@ -103,7 +103,7 @@ function renderTable() {
           <option value="pending"    ${alert.status==='pending'?'selected':''}>Pending</option>
           <option value="approved"   ${alert.status==='approved'?'selected':''}>Approved</option>
           <option value="rejected"   ${alert.status==='rejected'?'selected':''}>Rejected</option>
-          <option value="in-progress" ${alert.status==='in-progress'?'selected':''}>In Progress</option>
+          <option value="in-progress" ${alert.status==='in-progress'?'selected':''}>In Progress"</option>
           <option value="resolved"   ${alert.status==='resolved'?'selected':''}>Resolved</option>
         </select>
       </td>
