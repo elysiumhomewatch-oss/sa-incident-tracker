@@ -89,21 +89,24 @@
     <tbody id="alert-table-body"></tbody>
   </table>
 
-  <!-- Blur Editor Modal -->
-  <div id="blur-modal">
-    <div id="blur-content">
-      <h2>Blur Faces / Plates – Photo <span id="current-photo-index"></span> of <span id="total-photos"></span></h2>
-      <p>Drag to draw red rectangles over areas to blur. Click "Apply Blur" when done for this photo.</p>
-      <canvas id="blur-canvas" width="800" height="600"></canvas>
-      <div class="blur-controls">
-        <button id="prev-photo">Previous Photo</button>
-        <button id="clear-rects">Clear Rectangles</button>
-        <button id="apply-blur">Apply Blur & Save</button>
-        <button id="cancel-blur">Cancel</button>
-        <button id="next-photo">Next Photo</button>
-      </div>
+<!-- Blur Editor Modal -->
+<div id="blur-modal">
+  <div id="blur-content">
+    <h2>Blur Faces / Plates – Photo <span id="current-photo-index">1</span> of <span id="total-photos">0</span></h2>
+    <p>Draw red rectangles over faces/plates. Click "Apply Blur" to save this photo's changes. Use Next/Prev to edit others.</p>
+    
+    <canvas id="blur-canvas" width="800" height="600"></canvas>
+    
+    <div class="blur-controls" style="margin-top: 20px; display: flex; justify-content: center; gap: 12px; flex-wrap: wrap;">
+      <button id="prev-photo">← Previous Photo</button>
+      <button id="clear-rects">Clear Rectangles</button>
+      <button id="apply-blur">Apply Blur to This Photo</button>
+      <button id="done-blur" style="background:#28a745; color:white; font-weight:bold;">Done – Save All & Close</button>
+      <button id="cancel-blur">Cancel</button>
+      <button id="next-photo">Next Photo →</button>
     </div>
   </div>
+</div>
 
   <script src="js/map.js"></script>
   <script src="js/admin.js"></script>
