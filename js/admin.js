@@ -1,4 +1,4 @@
-// -sa-incident-tracker/js/admin.js-
+// sa-incident-tracker/js/admin.js
 
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxwR8LmQ1zBjLWJVu9gXGwwT2wyXSsp3q4WcQT1Rb6dRIk9gvbiiZNJbUcwttMQ4ostdQ/exec";
 
@@ -369,6 +369,7 @@ function closeBlurModal() {
   currentPhotoUrls = [];
   currentPhotoIndex = 0;
 }
+
 
 // ────────────────────────────────────────────────
 // Live Cameras Section – horizontal scroll + add/remove
