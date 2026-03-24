@@ -1,6 +1,6 @@
 // sa-incident-tracker/js/public.js
 
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxwR8LmQ1zBjLWJVu9gXGwwT2wyXSsp3q4WcQT1Rb6dRIk9gvbiiZNJbUcwttMQ4ostdQ/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw1AAaIhkNZK3Q3KICFllQD03F3nvGiHF2jEblQX2ZoiOl38rhpemyZ5m5ct8ngm_3kLw/exec";
 
 document.addEventListener('DOMContentLoaded', () => {
   initMap();
@@ -17,63 +17,86 @@ document.addEventListener('DOMContentLoaded', () => {
 if (form) {
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    console.log("Form submit event triggered");
+    console.log("Form submit triggered");
 
-    // Show previews of selected photos (mobile-friendly)
     const previewDiv = document.getElementById('photo-preview');
-    previewDiv.innerHTML = '';
+    if (previewDiv) previewDiv.innerHTML = '';
 
     let photoUrls = [];
+    let photoBlobs = [];
 
-    for (let i = 1; i <= 3; i++) {
-      const fileInput = document.getElementById(`photo${i}`);
-      if (fileInput && fileInput.files && fileInput.files.length > 0) {
-        const file = fileInput.files[0];
-        console.log(`Photo ${i} selected:`, file.name, file.size, file.type);
+    // Collect files from all camera and gallery inputs
+    for (let slot = 1; slot <= 3; slot++) {
+      const cameraInput = document.getElementById(`photo${slot}-camera`);
+      const galleryInput = document.getElementById(`photo${slot}-gallery`);
 
-        // Show preview thumbnail
-        const img = document.createElement('img');
-        img.src = URL.createObjectURL(file);
-        img.style.width = '80px';
-        img.style.height = '80px';
-        img.style.objectFit = 'cover';
-        img.style.borderRadius = '6px';
-        img.style.border = '2px solid #006633';
-        previewDiv.appendChild(img);
+      let file = null;
+      if (cameraInput && cameraInput.files && cameraInput.files.length > 0) {
+        file = cameraInput.files[0];
+      } else if (galleryInput && galleryInput.files && galleryInput.files.length > 0) {
+        file = galleryInput.files[0];
+      }
 
-        const uploadFormData = new FormData();
-        uploadFormData.append("image", file);
-        uploadFormData.append("key", "ccb5d3992f0066955a63d303a75c32a0");
+      if (file) {
+        console.log(`Photo ${slot} selected: ${file.name}, size: ${(file.size / 1024).toFixed(1)} KB`);
 
-        try {
-          console.log(`Uploading photo ${i}...`);
-          const uploadResponse = await fetch("https://api.imgbb.com/1/upload", {
-            method: "POST",
-            body: uploadFormData
-          });
+        const resizedBlob = await resizeAndCompressImage(file, 800, 0.7);
+        if (resizedBlob) {
+          photoBlobs.push(resizedBlob);
 
-          console.log(`Upload HTTP status for photo ${i}:`, uploadResponse.status);
-
-          const uploadResult = await uploadResponse.json();
-          console.log(`Full ImgBB response for photo ${i}:`, JSON.stringify(uploadResult));
-
-          if (uploadResult.success && uploadResult.data && uploadResult.data.url) {
-            photoUrls.push(uploadResult.data.url);
-            console.log(`Photo ${i} success: ${uploadResult.data.url}`);
-          } else {
-            console.error(`Photo ${i} failed:`, uploadResult.error || "No success");
-            alert(`Photo ${i} upload failed – continuing without it.`);
+          // Show preview
+          if (previewDiv) {
+            const img = document.createElement('img');
+            img.src = URL.createObjectURL(resizedBlob);
+            img.style.width = '80px';
+            img.style.height = '80px';
+            img.style.objectFit = 'cover';
+            img.style.borderRadius = '6px';
+            img.style.border = '2px solid #006633';
+            previewDiv.appendChild(img);
           }
-        } catch (uploadErr) {
-          console.error(`Photo ${i} error:`, uploadErr);
-          alert(`Could not upload photo ${i} – continuing without it.`);
         }
       }
     }
 
-    console.log("All uploaded photo URLs:", photoUrls);
+    if (photoBlobs.length > 3) {
+      alert("Maximum 3 photos allowed. Using first 3.");
+      photoBlobs = photoBlobs.slice(0, 3);
+    }
 
-    // Build params
+    console.log(`Prepared ${photoBlobs.length} resized photos for upload`);
+
+    // Upload to ImgBB
+    for (let i = 0; i < photoBlobs.length; i++) {
+      const blob = photoBlobs[i];
+      const uploadFormData = new FormData();
+      uploadFormData.append("image", blob, `photo-${i+1}.jpg`);
+      uploadFormData.append("key", "ccb5d3992f0066955a63d303a75c32a0");
+
+      try {
+        console.log(`Uploading photo ${i+1}...`);
+        const res = await fetch("https://api.imgbb.com/1/upload", {
+          method: "POST",
+          body: uploadFormData
+        });
+
+        const json = await res.json();
+        console.log(`ImgBB response for photo ${i+1}:`, json);
+
+        if (json.success && json.data?.url) {
+          photoUrls.push(json.data.url);
+          console.log(`Photo ${i+1} uploaded successfully: ${json.data.url}`);
+        } else {
+          console.error(`Photo ${i+1} upload failed:`, json.error);
+          alert(`Photo ${i+1} upload failed – continuing without it.`);
+        }
+      } catch (err) {
+        console.error(`Photo ${i+1} error:`, err);
+        alert(`Could not upload photo ${i+1} – continuing without it.`);
+      }
+    }
+
+    // Build params and submit
     const formData = new FormData(form);
     const params = new URLSearchParams();
 
@@ -91,20 +114,21 @@ if (form) {
 
     try {
       const response = await fetch(`${SCRIPT_URL}?${params.toString()}`);
-      console.log("Fetch response status:", response.status);
-
       const result = await response.json();
-      console.log("FULL SERVER RESPONSE:", result);
 
       if (result.success) {
         messageDiv.textContent = "Report submitted successfully — awaiting moderation.";
         messageDiv.style.color = "#28a745";
         messageDiv.style.display = "block";
         form.reset();
-        previewDiv.innerHTML = ''; // clear previews
-        for (let i = 1; i <= 3; i++) {
-          const input = document.getElementById(`photo${i}`);
-          if (input) input.value = "";
+        if (previewDiv) previewDiv.innerHTML = '';
+
+        // Clear all photo inputs
+        for (let slot = 1; slot <= 3; slot++) {
+          const cam = document.getElementById(`photo${slot}-camera`);
+          const gal = document.getElementById(`photo${slot}-gallery`);
+          if (cam) cam.value = '';
+          if (gal) gal.value = '';
         }
       } else {
         messageDiv.textContent = "Submission failed: " + (result.error || "Unknown");
@@ -118,9 +142,7 @@ if (form) {
       messageDiv.style.display = "block";
     }
 
-    setTimeout(() => {
-      messageDiv.style.display = "none";
-    }, 8000);
+    setTimeout(() => { messageDiv.style.display = "none"; }, 8000);
   });
 }
 });
@@ -200,4 +222,30 @@ async function loadPublicAlerts() {
     console.error("Public alerts load error:", err);
     // Optional: show user message on page
   }
+}
+
+// Resize and compress image client-side
+async function resizeAndCompressImage(file, maxWidth = 800, quality = 0.7) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      let width = img.width;
+      let height = img.height;
+
+      if (width > maxWidth) {
+        height = Math.round((height * maxWidth) / width);
+        width = maxWidth;
+      }
+
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, width, height);
+
+      canvas.toBlob((blob) => resolve(blob), 'image/jpeg', quality);
+    };
+    img.onerror = reject;
+    img.src = URL.createObjectURL(file);
+  });
 }
