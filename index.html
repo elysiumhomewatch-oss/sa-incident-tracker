@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <link rel="icon" href="data:;base64,iVBORw0KGgo=">
-  <title>ZA Incident Tracker • Public </title>
+  <title>ZA Incident Tracker • Public</title>
 
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -13,12 +13,18 @@
   <link rel="stylesheet" href="css/style.css">
 
   <style>
-    #map { 
-      height: 55vh; 
-      min-height: 300px; 
-      max-height: 620px; 
-      margin: 20px auto; 
-      width: 100%; 
+    #map-container {
+      position: relative;
+      width: 100%;
+      margin: 20px auto;
+    }
+    #map {
+      width: 100%;
+      height: 55vh;
+      min-height: 300px;
+      max-height: 620px;
+      border: 3px solid #006633;
+      border-radius: 10px;
     }
     @media (max-width: 600px) {
       body { padding: 12px; }
@@ -49,20 +55,21 @@
   </style>
 </head>
 <body>
-  <h1 style="color: var(--afriforum-red);">Incident Tracker • Durban / KZN</h1>
+  <h1 style="color: var(--afriforum-red);">AfriForum Incident Tracker • Durban / KZN</h1>
   <p style="text-align:center">Only moderator-approved incidents shown • Submit below → waits for review</p>
 
-  <div id="map-container" style="position: relative; width: 100%; margin: 20px auto;">
-  <div id="map" style="width: 100%; height: 55vh; min-height: 300px; border: 3px solid #006633; border-radius: 10px;"></div>
-  
-  <!-- Resize Handle -->
-  <div id="resize-handle" 
-       style="position: absolute; bottom: 8px; right: 8px; width: 24px; height: 24px; 
-              cursor: nwse-resize; z-index: 1000; opacity: 0.7; font-size: 18px; 
-              color: #006633; user-select: none;">
-    ↘
+  <!-- Map with resize handle -->
+  <div id="map-container">
+    <div id="map"></div>
+    
+    <!-- Resize Handle -->
+    <div id="resize-handle" 
+         style="position: absolute; bottom: 8px; right: 8px; width: 24px; height: 24px; 
+                cursor: nwse-resize; z-index: 1000; opacity: 0.8; font-size: 20px; 
+                color: #006633; user-select: none; pointer-events: auto;">
+      ↘
+    </div>
   </div>
-</div>
 
   <details style="max-width:800px; margin:20px auto; background:white; padding:15px; border-radius:8px;">
     <summary style="font-weight:bold; cursor:pointer;">Submit New Report (Anonymous)</summary>
@@ -103,20 +110,17 @@
           </div>
         </div>
 
-        <!-- Mobile-optimized photo upload with separate camera/gallery buttons -->
+        <!-- Photo upload -->
         <div style="margin:25px 0;">
           <label style="display:block; font-weight:600; margin-bottom:12px;">Attach Photos (up to 3 – optional)</label>
-
           <div style="display:flex; flex-direction:column; gap:18px;">
             <!-- Photo 1 -->
             <div class="photo-slot">
               <div class="photo-buttons" style="display:flex; gap:12px;">
-                <button type="button" onclick="openCamera(1)" 
-                        style="flex:1; padding:16px; background:#006633; color:white; border:none; border-radius:8px; font-size:1.05em; min-height:54px;">
+                <button type="button" onclick="openCamera(1)" style="flex:1; padding:16px; background:#006633; color:white; border:none; border-radius:8px; font-size:1.05em; min-height:54px;">
                   📸 Photo 1 – Take Photo
                 </button>
-                <button type="button" onclick="openGallery(1)" 
-                        style="flex:1; padding:16px; background:#F15A24; color:white; border:none; border-radius:8px; font-size:1.05em; min-height:54px;">
+                <button type="button" onclick="openGallery(1)" style="flex:1; padding:16px; background:#F15A24; color:white; border:none; border-radius:8px; font-size:1.05em; min-height:54px;">
                   🖼️ Photo 1 – Choose from Gallery
                 </button>
               </div>
@@ -127,12 +131,10 @@
             <!-- Photo 2 -->
             <div class="photo-slot">
               <div class="photo-buttons" style="display:flex; gap:12px;">
-                <button type="button" onclick="openCamera(2)" 
-                        style="flex:1; padding:16px; background:#006633; color:white; border:none; border-radius:8px; font-size:1.05em; min-height:54px;">
+                <button type="button" onclick="openCamera(2)" style="flex:1; padding:16px; background:#006633; color:white; border:none; border-radius:8px; font-size:1.05em; min-height:54px;">
                   📸 Photo 2 – Take Photo
                 </button>
-                <button type="button" onclick="openGallery(2)" 
-                        style="flex:1; padding:16px; background:#F15A24; color:white; border:none; border-radius:8px; font-size:1.05em; min-height:54px;">
+                <button type="button" onclick="openGallery(2)" style="flex:1; padding:16px; background:#F15A24; color:white; border:none; border-radius:8px; font-size:1.05em; min-height:54px;">
                   🖼️ Photo 2 – Choose from Gallery
                 </button>
               </div>
@@ -143,12 +145,10 @@
             <!-- Photo 3 -->
             <div class="photo-slot">
               <div class="photo-buttons" style="display:flex; gap:12px;">
-                <button type="button" onclick="openCamera(3)" 
-                        style="flex:1; padding:16px; background:#006633; color:white; border:none; border-radius:8px; font-size:1.05em; min-height:54px;">
+                <button type="button" onclick="openCamera(3)" style="flex:1; padding:16px; background:#006633; color:white; border:none; border-radius:8px; font-size:1.05em; min-height:54px;">
                   📸 Photo 3 – Take Photo
                 </button>
-                <button type="button" onclick="openGallery(3)" 
-                        style="flex:1; padding:16px; background:#F15A24; color:white; border:none; border-radius:8px; font-size:1.05em; min-height:54px;">
+                <button type="button" onclick="openGallery(3)" style="flex:1; padding:16px; background:#F15A24; color:white; border:none; border-radius:8px; font-size:1.05em; min-height:54px;">
                   🖼️ Photo 3 – Choose from Gallery
                 </button>
               </div>
@@ -177,19 +177,14 @@
   <script src="js/map.js"></script>
   <script src="js/public.js"></script>
 
-   <!-- Click-to-Report Confirmation Modal -->
+  <!-- Click-to-Report Confirmation Modal -->
   <div id="add-report-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.65); z-index:2000; justify-content:center; align-items:center; font-family:Arial,Helvetica,sans-serif;">
     <div style="background:#fff; padding:28px; border-radius:10px; max-width:460px; width:92%; box-shadow:0 12px 40px rgba(0,0,0,0.35);">
       <h3 style="margin-top:0; color:#1a3c6d;">Add new report at this location?</h3>
-      
-      <p style="margin:18px 0; font-size:1.05em;">
-        Coordinates selected on map:
-      </p>
-      
+      <p style="margin:18px 0; font-size:1.05em;">Coordinates selected on map:</p>
       <p id="modal-coords-display" style="font-family:monospace; background:#f8f9fa; padding:12px; border-radius:6px; border:1px solid #dee2e6; white-space:pre; margin:0 0 24px 0;">
         Latitude: —\nLongitude: —
       </p>
-      
       <div style="display:flex; gap:16px; justify-content:flex-end;">
         <button id="modal-cancel-btn" style="padding:10px 22px; background:#6c757d; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:bold;">
           Cancel
@@ -201,7 +196,7 @@
     </div>
   </div>
 
-  <!-- Safe inline script for camera/gallery and previews -->
+  <!-- Safe inline script for camera/gallery buttons -->
   <script>
     function openCamera(slot) {
       const input = document.getElementById(`photo${slot}-camera`);
@@ -213,7 +208,7 @@
       if (input) input.click();
     }
 
-    // Safe preview handler - only run on photo inputs
+    // Preview handler
     document.querySelectorAll('input[id^="photo"][id$="-camera"], input[id^="photo"][id$="-gallery"]').forEach(input => {
       input.addEventListener('change', () => {
         const file = input.files[0];
