@@ -2,21 +2,13 @@
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw1AAaIhkNZK3Q3KICFllQD03F3nvGiHF2jEblQX2ZoiOl38rhpemyZ5m5ct8ngm_3kLw/exec";
 
 document.addEventListener('DOMContentLoaded', () => {
-  // Wait a tiny bit to ensure map.js has loaded and defined the functions
+  // Small delay to ensure map.js functions are available
   setTimeout(() => {
-    if (typeof initMap === 'function') {
-      initMap();
-    } else {
-      console.error("initMap function not found! Make sure map.js is loaded before public.js");
-    }
-
-    if (typeof enableReportClick === 'function') {
-      enableReportClick();
-    }
+    if (typeof initMap === 'function') initMap();
+    if (typeof enableReportClick === 'function') enableReportClick();
 
     loadPublicAlerts();
 
-    // Form handling
     const form = document.getElementById('submit-report-form');
     const messageDiv = document.getElementById('submit-message');
 
@@ -101,7 +93,7 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         }
 
-        // Submit to Apps Script
+        // Build params and submit
         const formData = new FormData(form);
         const params = new URLSearchParams();
 
@@ -150,10 +142,10 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => { messageDiv.style.display = "none"; }, 8000);
       });
     }
-  }, 100); // Small delay to ensure map.js loads first
+  }, 150); // Small delay to ensure map.js is loaded
 }
 
-// Resize and compress image
+// Resize and compress image client-side
 async function resizeAndCompressImage(file, maxWidth = 800, quality = 0.7) {
   return new Promise((resolve, reject) => {
     const img = new Image();
