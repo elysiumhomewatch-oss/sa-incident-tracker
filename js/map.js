@@ -1,4 +1,4 @@
-// sa-incident-tracker/js/map.js
+// sa-incident-tracker/js/map.js 
 const MAP_CENTER = [-29.85, 31.03];
 const DEFAULT_ZOOM = 11;
 
