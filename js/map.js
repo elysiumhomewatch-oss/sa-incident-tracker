@@ -77,7 +77,7 @@ function initMap(containerId = 'map') {
   return window.mapInstance;
 }
 
-// ==================== IMPROVED LEGEND WITH DATE SLIDER ====================
+// ==================== LEGEND WITH DATE SLIDER ====================
 function addLegendWithFilters() {
   const legend = L.control({ position: 'topright' });
 
@@ -100,7 +100,6 @@ function addLegendWithFilters() {
         <span>🔍 Filter Incidents</span>
         <span id="legend-toggle" style="font-size:1.1em;">▼</span>
       </div>
-
       <div id="legend-body" style="display:none; padding-top:10px;">
         <!-- Type Filters -->
         <div style="margin-bottom:16px;">
@@ -133,11 +132,10 @@ function addLegendWithFilters() {
       </div>
     `;
 
-    // Prevent map interaction when clicking inside legend
     L.DomEvent.disableClickPropagation(div);
     L.DomEvent.disableScrollPropagation(div);
 
-    // Toggle functionality
+    // Toggle
     const header = div.querySelector('#legend-header');
     const body = div.querySelector('#legend-body');
     const toggle = div.querySelector('#legend-toggle');
@@ -152,7 +150,7 @@ function addLegendWithFilters() {
       }
     });
 
-    // Type filter change
+    // Type checkboxes
     div.querySelectorAll('input[type="checkbox"]').forEach(cb => {
       cb.addEventListener('change', applyFilters);
     });
@@ -160,17 +158,19 @@ function addLegendWithFilters() {
     // Date slider
     const slider = div.querySelector('#date-slider');
     const label = div.querySelector('#date-label');
-    slider.addEventListener('input', () => {
-      const days = parseInt(slider.value);
-      label.textContent = days === 90 ? "Last 90 days" : `Last ${days} days`;
-      applyFilters();
-    });
+    if (slider && label) {
+      slider.addEventListener('input', () => {
+        const days = parseInt(slider.value);
+        label.textContent = days === 90 ? "Last 90 days" : `Last ${days} days`;
+        applyFilters();
+      });
+    }
 
     // Reset button
     div.querySelector('#reset-filters').addEventListener('click', () => {
       div.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = true);
-      slider.value = 90;
-      label.textContent = "Last 90 days";
+      if (slider) slider.value = 90;
+      if (label) label.textContent = "Last 90 days";
       applyFilters();
     });
 
@@ -221,10 +221,9 @@ function applyFilters() {
   fitToMarkers();
 }
 
-// Robust date parser for Google Sheets timestamps
+// Robust date parser
 function parseGoogleDateToMs(timestamp) {
   if (!timestamp) return null;
-
   let date = new Date(timestamp);
   if (!isNaN(date.getTime())) return date.getTime();
 
@@ -271,7 +270,7 @@ function addMarkerToCluster(alert) {
 
   const marker = L.marker([lat, lng], { icon: markerIcon });
 
-  // === YOUR ORIGINAL POPUP (restored) ===
+  // Your original popup (restored)
   const popupContent = `
     <div style="font-family: Arial, sans-serif; min-width: 320px; max-width: 420px; padding: 8px;">
       <b style="font-size: 1.25em; color: #1a3c6d;">${alert.type?.toUpperCase() || 'OTHER'} – ${alert.area || 'Unknown'}</b><br>
@@ -314,7 +313,7 @@ function addMarkerToCluster(alert) {
 
   marker.bindPopup(popupContent);
   marker.options.alertType = typeKey;
-  marker.options.timestamp = alert.timestamp;   // ← Critical for date filter!
+  marker.options.timestamp = alert.timestamp;   // Critical for date filter
 
   allMarkers.push(marker);
   markersCluster.addLayer(marker);
