@@ -2,7 +2,7 @@
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw1AAaIhkNZK3Q3KICFllQD03F3nvGiHF2jEblQX2ZoiOl38rhpemyZ5m5ct8ngm_3kLw/exec";
 
 document.addEventListener('DOMContentLoaded', () => {
-  // Small delay to ensure map.js functions are available
+  // Small delay to ensure map.js has defined initMap and enableReportClick
   setTimeout(() => {
     if (typeof initMap === 'function') initMap();
     if (typeof enableReportClick === 'function') enableReportClick();
@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let photoUrls = [];
         let photoBlobs = [];
 
-        // Collect from camera and gallery inputs
+        // Collect files from camera and gallery inputs
         for (let slot = 1; slot <= 3; slot++) {
           const cameraInput = document.getElementById(`photo${slot}-camera`);
           const galleryInput = document.getElementById(`photo${slot}-gallery`);
@@ -93,7 +93,7 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         }
 
-        // Build params and submit
+        // Build params and submit to Apps Script
         const formData = new FormData(form);
         const params = new URLSearchParams();
 
@@ -120,7 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
             form.reset();
             if (previewDiv) previewDiv.innerHTML = '';
 
-            // Clear inputs
+            // Clear all photo inputs
             for (let slot = 1; slot <= 3; slot++) {
               const cam = document.getElementById(`photo${slot}-camera`);
               const gal = document.getElementById(`photo${slot}-gallery`);
@@ -169,7 +169,7 @@ async function resizeAndCompressImage(file, maxWidth = 800, quality = 0.7) {
 }
 
 // ────────────────────────────────────────────────
-// Modal handler
+// Modal handler for "Add report here?"
 // ────────────────────────────────────────────────
 function showAddReportModal(lat, lng) {
   const modal = document.getElementById('add-report-modal');
@@ -211,7 +211,7 @@ function showAddReportModal(lat, lng) {
 }
 
 // ────────────────────────────────────────────────
-// Load approved alerts
+// Load approved alerts only
 // ────────────────────────────────────────────────
 async function loadPublicAlerts() {
   try {
