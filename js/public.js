@@ -2,7 +2,7 @@
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw1AAaIhkNZK3Q3KICFllQD03F3nvGiHF2jEblQX2ZoiOl38rhpemyZ5m5ct8ngm_3kLw/exec";
 
 document.addEventListener('DOMContentLoaded', () => {
-  // Small delay to ensure map.js has defined initMap and enableReportClick
+  // Small delay to make sure map.js has loaded
   setTimeout(() => {
     if (typeof initMap === 'function') initMap();
     if (typeof enableReportClick === 'function') enableReportClick();
@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let photoUrls = [];
         let photoBlobs = [];
 
-        // Collect files from camera and gallery inputs
+        // Collect photos from all slots
         for (let slot = 1; slot <= 3; slot++) {
           const cameraInput = document.getElementById(`photo${slot}-camera`);
           const galleryInput = document.getElementById(`photo${slot}-gallery`);
@@ -93,7 +93,7 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         }
 
-        // Build params and submit to Apps Script
+        // Submit to Google Apps Script
         const formData = new FormData(form);
         const params = new URLSearchParams();
 
@@ -120,7 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
             form.reset();
             if (previewDiv) previewDiv.innerHTML = '';
 
-            // Clear all photo inputs
+            // Clear inputs
             for (let slot = 1; slot <= 3; slot++) {
               const cam = document.getElementById(`photo${slot}-camera`);
               const gal = document.getElementById(`photo${slot}-gallery`);
@@ -142,7 +142,7 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => { messageDiv.style.display = "none"; }, 8000);
       });
     }
-  }, 150); // Small delay to ensure map.js is loaded
+  }, 150);
 }
 
 // Resize and compress image client-side
@@ -168,9 +168,7 @@ async function resizeAndCompressImage(file, maxWidth = 800, quality = 0.7) {
   });
 }
 
-// ────────────────────────────────────────────────
-// Modal handler for "Add report here?"
-// ────────────────────────────────────────────────
+// Modal handler
 function showAddReportModal(lat, lng) {
   const modal = document.getElementById('add-report-modal');
   const coordsDisplay = document.getElementById('modal-coords-display');
@@ -210,9 +208,7 @@ function showAddReportModal(lat, lng) {
   cancelBtn.addEventListener('click', onCancel);
 }
 
-// ────────────────────────────────────────────────
-// Load approved alerts only
-// ────────────────────────────────────────────────
+// Load approved alerts
 async function loadPublicAlerts() {
   try {
     const res = await fetch(`${SCRIPT_URL}?action=get-alerts&filter=approved`);
