@@ -6,7 +6,7 @@
 :root {
   --muted-orange:      #F5821F;     /* softer, muted terracotta orange – page background */
   --afriforum-green:   #0D723B;     /* deep green – thick map border, approve buttons */
-  --afriforum-red:     #C8102E;     /* shield red – reject/danger */
+  --afriforum-red:     #0D723B;     /* shield red – reject/danger */
   --dark-text:         #000000;
   --light-text:        #FFFFFF;
   --card-bg:           #FFFFFF;
