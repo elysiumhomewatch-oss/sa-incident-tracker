@@ -4,15 +4,15 @@
 @import url('https://fonts.googleapis.com/css2?family=Proxima+Nova:wght@400;500;600;700&display=swap');
 
 :root {
-  --muted-orange:      #D16A3A;     /* softer, muted terracotta orange – page background */
-  --afriforum-green:   #006633;     /* deep green – thick map border, approve buttons */
+  --muted-orange:      #F5821F;     /* softer, muted terracotta orange – page background */
+  --afriforum-green:   #0D723B;     /* deep green – thick map border, approve buttons */
   --afriforum-red:     #C8102E;     /* shield red – reject/danger */
   --dark-text:         #000000;
   --light-text:        #FFFFFF;
   --card-bg:           #FFFFFF;
-  --border-orange:     #E8BFA9;     /* very light muted orange for subtle borders */
-  --hover-orange:      #B85A2F;
-  --hover-green:       #005229;
+  --border-orange:     #0D723B;     /* very light muted orange for subtle borders */
+  --hover-orange:      #F5821F;
+  --hover-green:       #0D723B;
 }
 
 * {
