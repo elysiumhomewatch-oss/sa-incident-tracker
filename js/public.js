@@ -7,18 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
   loadPublicAlerts();
 
 
-  // Add search control (geocoder)
-L.Control.geocoder({
-    defaultMarkGeocode: true,        // automatically add a marker when result is found
-    position: 'topright',            // or 'topleft'
-    placeholder: 'Search suburb or landmark (e.g. Durban CBD, Umlazi)',
-    geocoder: L.Control.Geocoder.nominatim({
-        geocodingQueryParams: {
-            countrycodes: 'za',      // Restrict search to South Africa (highly recommended)
-            // viewbox: '30.8,-30.1,31.2,-29.6', // Optional: tighten to KZN/Durban area
-        }
-    })
-}).addTo(map);
+
 
 
   
@@ -293,54 +282,4 @@ async function loadPublicAlerts() {
     console.error("Public alerts load error:", err);
   }
 }
-
-  // ==================== MAP RESIZE HANDLE ====================
-  const resizeHandle = document.getElementById('resize-handle');
-  const mapDiv = document.getElementById('map');
-
-  let isResizing = false;
-  let startY, startHeight;
-
-  if (resizeHandle) {
-    resizeHandle.addEventListener('mousedown', (e) => {
-      isResizing = true;
-      startY = e.clientY;
-      startHeight = mapDiv.clientHeight;
-      document.body.style.cursor = 'nwse-resize';
-      e.preventDefault();
-    });
-
-    resizeHandle.addEventListener('touchstart', (e) => {
-      isResizing = true;
-      startY = e.touches[0].clientY;
-      startHeight = mapDiv.clientHeight;
-      e.preventDefault();
-    });
-  }
-
-  document.addEventListener('mousemove', (e) => {
-    if (!isResizing) return;
-    const deltaY = e.clientY - startY;
-    let newHeight = startHeight + deltaY;
-    if (newHeight < 300) newHeight = 300;
-    if (newHeight > window.innerHeight * 0.8) newHeight = window.innerHeight * 0.8;
-
-    mapDiv.style.height = newHeight + 'px';
-    if (window.mapInstance) window.mapInstance.invalidateSize();
-  });
-
-  document.addEventListener('touchmove', (e) => {
-    if (!isResizing) return;
-    const deltaY = e.touches[0].clientY - startY;
-    let newHeight = startHeight + deltaY;
-    if (newHeight < 300) newHeight = 300;
-    if (newHeight > window.innerHeight * 0.8) newHeight = window.innerHeight * 0.8;
-
-    mapDiv.style.height = newHeight + 'px';
-    if (window.mapInstance) window.mapInstance.invalidateSize();
-  });
-
-  document.addEventListener('mouseup', () => { isResizing = false; document.body.style.cursor = 'default'; });
-  document.addEventListener('touchend', () => { isResizing = false; });
-
 
