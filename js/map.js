@@ -73,38 +73,40 @@ function initMap(containerId = 'map') {
 
   addLegendWithFilters();
   enableReportClick();
-  // ==================== LOCATION SEARCH (Geocoder) ====================
+ // ==================== LOCATION SEARCH (Geocoder) - Added at the end of initMap ====================
+  // Add search control
   const geocoder = L.Control.geocoder({
-      defaultMarkGeocode: false,           // We will handle the marker ourselves
+      defaultMarkGeocode: false,           // We control the marker + modal ourselves
       position: 'topright',
       placeholder: 'Search suburb or landmark (e.g. Durban CBD, Umlazi, Pinetown)',
       geocoder: L.Control.Geocoder.nominatim({
           geocodingQueryParams: {
-              countrycodes: 'za',           // Restrict to South Africa
-              // viewbox: '30.5,-30.2,31.5,-29.4', // Optional: tighter Durban/KZN bounding box
+              countrycodes: 'za',          // Restrict to South Africa
+              // viewbox: '30.5,-30.2,31.5,-29.4', // Optional: tighter Durban area
           }
       })
   }).addTo(window.mapInstance);
 
-  // When user selects a search result → open the Add Report modal
+  // When user selects a result → zoom + open "Add Report" modal
   geocoder.on('markgeocode', function(e) {
       const latlng = e.geocode.center;
 
       if (latlng) {
           window.mapInstance.flyTo(latlng, 17, { duration: 1.2 });
 
-          // Remove old temporary marker if exists
+          // Remove previous temp marker
           if (window.tempMarker) {
               window.mapInstance.removeLayer(window.tempMarker);
           }
 
-          // Add a new draggable marker
+          // Add new draggable marker
           window.tempMarker = L.marker(latlng, { draggable: true }).addTo(window.mapInstance);
 
-          // Open the modal with coordinates
-          showAddReportModal(latlng.lat, latlng.lng);
+          // Open the modal
+          showAddReportModal(latlng.lat.toFixed(5), latlng.lng.toFixed(5));
       }
   });
+
   return window.mapInstance;
 }
 
