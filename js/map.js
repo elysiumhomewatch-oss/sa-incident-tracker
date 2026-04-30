@@ -73,7 +73,38 @@ function initMap(containerId = 'map') {
 
   addLegendWithFilters();
   enableReportClick();
+  // ==================== LOCATION SEARCH (Geocoder) ====================
+  const geocoder = L.Control.geocoder({
+      defaultMarkGeocode: false,           // We will handle the marker ourselves
+      position: 'topright',
+      placeholder: 'Search suburb or landmark (e.g. Durban CBD, Umlazi, Pinetown)',
+      geocoder: L.Control.Geocoder.nominatim({
+          geocodingQueryParams: {
+              countrycodes: 'za',           // Restrict to South Africa
+              // viewbox: '30.5,-30.2,31.5,-29.4', // Optional: tighter Durban/KZN bounding box
+          }
+      })
+  }).addTo(window.mapInstance);
 
+  // When user selects a search result → open the Add Report modal
+  geocoder.on('markgeocode', function(e) {
+      const latlng = e.geocode.center;
+
+      if (latlng) {
+          window.mapInstance.flyTo(latlng, 17, { duration: 1.2 });
+
+          // Remove old temporary marker if exists
+          if (window.tempMarker) {
+              window.mapInstance.removeLayer(window.tempMarker);
+          }
+
+          // Add a new draggable marker
+          window.tempMarker = L.marker(latlng, { draggable: true }).addTo(window.mapInstance);
+
+          // Open the modal with coordinates
+          showAddReportModal(latlng.lat, latlng.lng);
+      }
+  });
   return window.mapInstance;
 }
 
