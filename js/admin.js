@@ -51,20 +51,39 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function loadAllAlerts() {
   try {
-    const res = await fetch(`${SCRIPT_URL}?action=get-alerts`);
-    const data = await res.json();
-    if (!data.success) throw new Error(data.error || "Load failed");
+    // Add cache-busting parameter
+    const url = `${SCRIPT_URL}?action=get-alerts&t=${Date.now()}`;
+    
+    console.log("Fetching alerts from:", url);
+    
+    const res = await fetch(url);
+    const text = await res.text();        // Get raw text first for debugging
+    console.log("Raw response:", text);
 
-    allAlerts = data.alerts;
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch (parseErr) {
+      console.error("JSON parse failed. Raw response was:", text);
+      throw new Error("Invalid JSON from server");
+    }
+
+    if (!data.success) {
+      throw new Error(data.error || "Unknown error from script");
+    }
+
+    allAlerts = data.alerts || [];
+    console.log(`Loaded ${allAlerts.length} alerts`);
+
     renderTable();
     renderMarkers();
     updatePendingCount();
+
   } catch (err) {
-    console.error("Admin load error:", err);
-    alert("Could not load alerts. Check console.");
+    console.error("Admin loadAllAlerts error:", err);
+    alert("Could not load alerts.\nCheck console (F12) for details.\nError: " + err.message);
   }
 }
-
 function renderTable() {
   const tbody = document.getElementById('alert-table-body');
   tbody.innerHTML = '';
