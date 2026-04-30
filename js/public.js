@@ -6,6 +6,22 @@ document.addEventListener('DOMContentLoaded', () => {
   enableReportClick();
   loadPublicAlerts();
 
+
+  // Add search control (geocoder)
+L.Control.geocoder({
+    defaultMarkGeocode: true,        // automatically add a marker when result is found
+    position: 'topright',            // or 'topleft'
+    placeholder: 'Search suburb or landmark (e.g. Durban CBD, Umlazi)',
+    geocoder: L.Control.Geocoder.nominatim({
+        geocodingQueryParams: {
+            countrycodes: 'za',      // Restrict search to South Africa (highly recommended)
+            // viewbox: '30.8,-30.1,31.2,-29.6', // Optional: tighten to KZN/Durban area
+        }
+    })
+}).addTo(map);
+
+
+  
   const form = document.getElementById('submit-report-form');
   const messageDiv = document.getElementById('submit-message');
 
